@@ -1,0 +1,11 @@
+# BasedOnStyle: LLVM
+IndentWidth: 8
+UseTab: AlignWithSpaces
+BreakBeforeBraces: Linux
+AllowShortIfStatementsOnASingleLine: false
+IndentCaseLabels: false
+AccessModifierOffset: -8
+AllowShortFunctionsOnASingleLine: None
+ColumnLimit: 0
+ConstructorInitializerIndentWidth: 8
+BreakConstructorInitializers: BeforeColon
