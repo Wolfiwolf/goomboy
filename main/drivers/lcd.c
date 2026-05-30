@@ -21,7 +21,7 @@
 #define LCD_BL          27
 #define LCD_BL_ON       1
 
-#define LCD_CLK_HZ      (40 * 1000 * 1000)
+#define LCD_CLK_HZ      (80 * 1000 * 1000)
 #define LCD_CMD_BITS    8
 #define LCD_PARAM_BITS  8
 
@@ -42,7 +42,7 @@ int lcd_init(void)
 	    .miso_io_num = LCD_MISO,
 	    .quadwp_io_num = -1,
 	    .quadhd_io_num = -1,
-	    .max_transfer_sz = LCD_H_SIZE * LCD_W_SIZE * sizeof(uint16_t),
+	    .max_transfer_sz = 320 * 200 * sizeof(uint16_t),
 	};
 	ESP_ERROR_CHECK(spi_bus_initialize(LCD_HOST, &buscfg, SPI_DMA_CH_AUTO));
 
@@ -54,7 +54,7 @@ int lcd_init(void)
 	    .lcd_cmd_bits = LCD_CMD_BITS,
 	    .lcd_param_bits = LCD_PARAM_BITS,
 	    .spi_mode = 0,
-	    .trans_queue_depth = 10,
+	    .trans_queue_depth = 1,
 	};
 	ESP_ERROR_CHECK(esp_lcd_new_panel_io_spi(LCD_HOST, &io_cfg, &io));
 
@@ -77,6 +77,6 @@ int lcd_init(void)
 
 int lcd_draw(int x, int y, int w, int h, const uint16_t *pixels)
 {
-	return esp_lcd_panel_draw_bitmap(s_panel, x, y, x + w + 1, y + h + 1,
+	return esp_lcd_panel_draw_bitmap(s_panel, x, y, x + w, y + h,
 					 pixels);
 }
