@@ -5,9 +5,9 @@
 
 #include "drivers/gpio.h"
 #include "drivers/lcd.h"
+#include "drivers/sdcard.h"
 #include "esp_heap_caps.h"
 #include "esp_log.h"
-#include "esp_pm.h"
 #include "esp_task_wdt.h"
 #include "freertos/idf_additions.h"
 #include "freertos/projdefs.h"
@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <inttypes.h>
 #include <string.h>
+#include "doomgeneric.h"
 
 #define SQUARE_COLOR 0xF800  /* red, RGB565 */
 
@@ -45,24 +46,45 @@ void stall(void)
 }
 
 
-static int posx = 0;
-static int dir = 2;
+void DG_Init()
+{
+
+}
+
+void DG_DrawFrame()
+{
+	lcd_draw(SCREEN_START_X, SCREEN_START_Y, DOOMGENERIC_RESX, DOOMGENERIC_RESY, DG_ScreenBuffer);
+}
+
+void DG_SleepMs(uint32_t ms)
+{
+	vTaskDelay(pdMS_TO_TICKS(ms));
+}
+
+uint32_t DG_GetTicksMs()
+{
+	return xTaskGetTickCount();
+}
+
+int DG_GetKey(int* pressed, unsigned char* key)
+{
+	return 0;
+}
+
+void DG_SetWindowTitle(const char * title)
+{
+	// Empty
+}
 
 void app_main(void)
 {
-	char *argv[] = {
+	const char *argv[3] = {
 		"doomgeneric",
-		"-iwad"
-		"DOOM.WAD"
+		"-iwad",
+		"/sdcard/10M.wad"
 	};
-	int argc = 2;
+	int argc = 3;
 	int ret;
-	esp_pm_config_t pm = {
-		.max_freq_mhz = 240,
-		.min_freq_mhz = 240,
-		.light_sleep_enable = false,
-	};
-	esp_pm_configure(&pm);
 
 	ESP_LOGE("", "Free MEM: %lu", sys_get_free_mem());
 
@@ -78,7 +100,30 @@ void app_main(void)
 		stall();
 	}
 
+	ret = sdcard_init();
+	if (ret) {
+		ESP_LOGE("", "SD card mount failed! Is DOOM1.WAD on a FAT-formatted card?");
+		stall();
+	}
+
+	doomgeneric_Create(argc, argv);
+
 	while (1) {
-		vTaskDelay(pdMS_TO_TICKS(40));
+		doomgeneric_Tick();
 	}
 }
+/* Biggest .bss
+ visplanes    │ 84,992 B │ RAM (.bss)             │ r_plane.c │
+├──────────────┼──────────┼────────────────────────┼───────────┤
+│ finesine     │ 40,960 B │ flash (.rodata, const) │ tables.c  │
+├──────────────┼──────────┼────────────────────────┼───────────┤
+│ openings     │ 40,960 B │ RAM (.bss)             │ r_plane.c │
+├──────────────┼──────────┼────────────────────────┼───────────┤
+│ states       │ 27,076 B │ RAM (.data)            │ info.c    │
+├──────────────┼──────────┼────────────────────────┼───────────┤
+│ ticdata      │ 20,480 B │ RAM (.bss)             │ d_loop.c  │
+├──────────────┼──────────┼────────────────────────┼───────────┤
+│ finetangent  │ 16,384 B │ flash (const)          │ tables.c  │
+├──────────────┼──────────┼────────────────────────┼───────────┤
+│ viewangletox │ 16,384 B │ RAM (.bss)             │ r_main.c
+ * */

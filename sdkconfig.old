@@ -706,11 +706,48 @@ CONFIG_PARTITION_TABLE_MD5=y
 # end of Partition Table
 
 #
+# ESP32-Doom platform-specific configuration
+#
+# default:
+# CONFIG_HW_WROVERKIT_V1 is not set
+# default:
+CONFIG_HW_WROVERKIT_V2=y
+# default:
+# CONFIG_HW_CUSTOM is not set
+# default:
+CONFIG_HW_LCD_TYPE_ILI=y
+# default:
+# CONFIG_HW_LCD_TYPE_ST is not set
+# default:
+CONFIG_HW_WROVERKIT=y
+# default:
+CONFIG_HW_LCD_TYPE=0
+# default:
+CONFIG_HW_INV_BL=y
+# default:
+CONFIG_HW_LCD_MISO_GPIO=19
+# default:
+CONFIG_HW_LCD_MOSI_GPIO=23
+# default:
+CONFIG_HW_LCD_CLK_GPIO=18
+# default:
+CONFIG_HW_LCD_CS_GPIO=5
+# default:
+CONFIG_HW_LCD_DC_GPIO=22
+# default:
+CONFIG_HW_LCD_RESET_GPIO=21
+# default:
+CONFIG_HW_LCD_BL_GPIO=-1
+# default:
+# CONFIG_HW_PSX_ENA is not set
+# end of ESP32-Doom platform-specific configuration
+
+#
 # Compiler options
 #
-# CONFIG_COMPILER_OPTIMIZATION_DEBUG is not set
+CONFIG_COMPILER_OPTIMIZATION_DEBUG=y
 # CONFIG_COMPILER_OPTIMIZATION_SIZE is not set
-CONFIG_COMPILER_OPTIMIZATION_PERF=y
+# CONFIG_COMPILER_OPTIMIZATION_PERF is not set
 # CONFIG_COMPILER_OPTIMIZATION_NONE is not set
 # default:
 CONFIG_COMPILER_OPTIMIZATION_ASSERTIONS_ENABLE=y
@@ -1510,6 +1547,8 @@ CONFIG_FREERTOS_TASK_NOTIFICATION_ARRAY_ENTRIES=1
 #
 # Port
 #
+# default:
+CONFIG_FREERTOS_TASK_FUNCTION_WRAPPER=y
 # default:
 # CONFIG_FREERTOS_WATCHPOINT_END_OF_STACK is not set
 # default:
