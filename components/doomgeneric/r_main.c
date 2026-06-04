@@ -90,8 +90,7 @@ angle_t			clipangle;
 // maps the visible view angles to screen X coordinates,
 // flattening the arc to a flat projection plane.
 // There will be many angles mapped to the same X. 
-// int			viewangletox[FINEANGLES/2];
-int			*viewangletox;
+int			viewangletox[FINEANGLES/2];
 
 // The xtoviewangleangle[] table maps a screen pixel
 // to the lowest viewangle that maps back to x ranges
@@ -767,7 +766,6 @@ void R_ExecuteSetViewSize (void)
 
 void R_Init (void)
 {
-	viewangletox = malloc((FINEANGLES/2) * sizeof(int));
     R_InitData ();
     printf (".");
     R_InitPointToAngle ();

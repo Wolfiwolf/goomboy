@@ -31,11 +31,13 @@
 #include "m_misc.h"
 #include "p_local.h"
 
+#include "s_sound.h"
 
 // State.
 #include "doomstat.h"
 #include "r_state.h"
 // Data.
+#include "sounds.h"
 
 // Spechit overrun magic value.
 //
@@ -1146,6 +1148,7 @@ boolean	PTR_UseTraverse (intercept_t* in)
 	P_LineOpening (in->d.line);
 	if (openrange <= 0)
 	{
+	    S_StartSound (usething, sfx_noway);
 	    
 	    // can't use through a wall
 	    return false;	

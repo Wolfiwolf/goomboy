@@ -22,6 +22,7 @@
 // Data.
 #include "doomdef.h"
 #include "dstrings.h"
+#include "sounds.h"
 
 #include "deh_main.h"
 #include "deh_misc.h"
@@ -34,6 +35,7 @@
 
 #include "p_local.h"
 
+#include "s_sound.h"
 
 #include "p_inter.h"
 
@@ -178,6 +180,8 @@ P_GiveWeapon
 			P_GiveAmmo (player, weaponinfo[weapon].ammo, 2);
 		player->pendingweapon = weapon;
 
+		if (player == &players[consoleplayer])
+			S_StartSound (NULL, sfx_wpnup);
 		return false;
     }
 	
@@ -333,6 +337,7 @@ P_TouchSpecialThing
     player_t*	player;
     int		i;
     fixed_t	delta;
+    int		sound;
 		
     delta = special->z - toucher->z;
 
@@ -344,6 +349,7 @@ P_TouchSpecialThing
     }
     
 	
+    sound = sfx_itemup;	
     player = toucher->player;
 
     // Dead thing touching.
@@ -393,6 +399,7 @@ P_TouchSpecialThing
 	    player->health = deh_max_soulsphere;
 	player->mo->health = player->health;
 	player->message = DEH_String(GOTSUPER);
+	sound = sfx_getpow;
 	break;
 	
       case SPR_MEGA:
@@ -404,6 +411,7 @@ P_TouchSpecialThing
         // affects the MegaArmor.
 	P_GiveArmor (player, 2);
 	player->message = DEH_String(GOTMSPHERE);
+	sound = sfx_getpow;
 	break;
 	
 	// cards
@@ -479,6 +487,7 @@ P_TouchSpecialThing
 	if (!P_GivePower (player, pw_invulnerability))
 	    return;
 	player->message = DEH_String(GOTINVUL);
+	sound = sfx_getpow;
 	break;
 	
       case SPR_PSTR:
@@ -487,30 +496,35 @@ P_TouchSpecialThing
 	player->message = DEH_String(GOTBERSERK);
 	if (player->readyweapon != wp_fist)
 	    player->pendingweapon = wp_fist;
+	sound = sfx_getpow;
 	break;
 	
       case SPR_PINS:
 	if (!P_GivePower (player, pw_invisibility))
 	    return;
 	player->message = DEH_String(GOTINVIS);
+	sound = sfx_getpow;
 	break;
 	
       case SPR_SUIT:
 	if (!P_GivePower (player, pw_ironfeet))
 	    return;
 	player->message = DEH_String(GOTSUIT);
+	sound = sfx_getpow;
 	break;
 	
       case SPR_PMAP:
 	if (!P_GivePower (player, pw_allmap))
 	    return;
 	player->message = DEH_String(GOTMAP);
+	sound = sfx_getpow;
 	break;
 	
       case SPR_PVIS:
 	if (!P_GivePower (player, pw_infrared))
 	    return;
 	player->message = DEH_String(GOTVISOR);
+	sound = sfx_getpow;
 	break;
 	
 	// ammo
@@ -587,42 +601,49 @@ P_TouchSpecialThing
 	if (!P_GiveWeapon (player, wp_bfg, false) )
 	    return;
 	player->message = DEH_String(GOTBFG9000);
+	sound = sfx_wpnup;	
 	break;
 	
       case SPR_MGUN:
 	if (!P_GiveWeapon (player, wp_chaingun, (special->flags&MF_DROPPED) != 0) )
 	    return;
 	player->message = DEH_String(GOTCHAINGUN);
+	sound = sfx_wpnup;	
 	break;
 	
       case SPR_CSAW:
 	if (!P_GiveWeapon (player, wp_chainsaw, false) )
 	    return;
 	player->message = DEH_String(GOTCHAINSAW);
+	sound = sfx_wpnup;	
 	break;
 	
       case SPR_LAUN:
 	if (!P_GiveWeapon (player, wp_missile, false) )
 	    return;
 	player->message = DEH_String(GOTLAUNCHER);
+	sound = sfx_wpnup;	
 	break;
 	
       case SPR_PLAS:
 	if (!P_GiveWeapon (player, wp_plasma, false) )
 	    return;
 	player->message = DEH_String(GOTPLASMA);
+	sound = sfx_wpnup;	
 	break;
 	
       case SPR_SHOT:
 	if (!P_GiveWeapon (player, wp_shotgun, (special->flags&MF_DROPPED) != 0 ) )
 	    return;
 	player->message = DEH_String(GOTSHOTGUN);
+	sound = sfx_wpnup;	
 	break;
 		
       case SPR_SGN2:
 	if (!P_GiveWeapon (player, wp_supershotgun, (special->flags&MF_DROPPED) != 0 ) )
 	    return;
 	player->message = DEH_String(GOTSHOTGUN2);
+	sound = sfx_wpnup;	
 	break;
 		
       default:
@@ -633,6 +654,8 @@ P_TouchSpecialThing
 	player->itemcount++;
     P_RemoveMobj (special);
     player->bonuscount += BONUSADD;
+    if (player == &players[consoleplayer])
+	S_StartSound (NULL, sound);
 }
 
 

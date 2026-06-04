@@ -17,8 +17,6 @@
 
 
 
-#include "esp_heap_caps.h"
-#include "esp_log.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -44,6 +42,7 @@
 #include "m_config.h"
 #include "m_misc.h"
 #include "i_joystick.h"
+#include "i_sound.h"
 #include "i_timer.h"
 #include "i_video.h"
 
@@ -56,8 +55,8 @@
 #include <CoreFoundation/CFUserNotification.h>
 #endif
 
-#define DEFAULT_RAM (6 * 1024 * 1024) /* MiB */
-#define MIN_RAM     (100 * 1024)  /* MiB */
+#define DEFAULT_RAM 6 /* MiB */
+#define MIN_RAM     6  /* MiB */
 
 
 typedef struct atexit_listentry_s atexit_listentry_t;
@@ -101,11 +100,6 @@ static byte *AutoAllocMemory(int *size, int default_ram, int min_ram)
     // zone sizes until a size is found that can be allocated.
     // If we used the -mb command line parameter, only the parameter
     // provided is accepted.
-	multi_heap_info_t meminfo;
-
-	heap_caps_get_info(&meminfo, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
-
-	ESP_LOGE("", "Free bytes: %lu", meminfo.total_free_bytes);
 
     zonemem = NULL;
 
@@ -115,13 +109,12 @@ static byte *AutoAllocMemory(int *size, int default_ram, int min_ram)
 
         if (default_ram < min_ram)
         {
-
             I_Error("Unable to allocate %i MiB of RAM for zone", default_ram);
         }
 
         // Try to allocate the zone memory.
 
-        *size = default_ram;
+        *size = default_ram * 1024 * 1024;
 
         zonemem = malloc(*size);
 
@@ -130,7 +123,7 @@ static byte *AutoAllocMemory(int *size, int default_ram, int min_ram)
 
         if (zonemem == NULL)
         {
-            default_ram -= 128;
+            default_ram -= 1;
         }
     }
 

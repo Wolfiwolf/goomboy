@@ -43,16 +43,14 @@ planefunction_t		ceilingfunc;
 
 // Here comes the obnoxious "visplane".
 #define MAXVISPLANES	128
-// visplane_t		visplanes[MAXVISPLANES];
-visplane_t		*visplanes;
+visplane_t		visplanes[MAXVISPLANES];
 visplane_t*		lastvisplane;
 visplane_t*		floorplane;
 visplane_t*		ceilingplane;
 
 // ?
 #define MAXOPENINGS	SCREENWIDTH*64
-// short			openings[MAXOPENINGS];
-short			*openings;
+short			openings[MAXOPENINGS];
 short*			lastopening;
 
 
@@ -95,13 +93,6 @@ fixed_t			cachedystep[SCREENHEIGHT];
 //
 void R_InitPlanes (void)
 {
-	visplanes = malloc(MAXVISPLANES * sizeof(visplane_t));
-	if (!visplanes)
-		printf("Visplanes could not be allcoated!\n");
-
-	openings = malloc(MAXOPENINGS * sizeof(short));
-	if (!openings)
-		printf("Openings could not be allcoated!\n");
   // Doh!
 }
 

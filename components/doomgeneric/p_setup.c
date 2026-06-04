@@ -36,6 +36,7 @@
 #include "doomdef.h"
 #include "p_local.h"
 
+#include "s_sound.h"
 
 #include "doomstat.h"
 
@@ -763,6 +764,7 @@ P_SetupLevel
     players[consoleplayer].viewz = 1; 
 
     // Make sure all sounds are stopped before Z_FreeTags.
+    S_Start ();			
 
     Z_FreeTags (PU_LEVEL, PU_PURGELEVEL-1);
 

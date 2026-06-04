@@ -15,8 +15,8 @@
 #include "utils/queue.h"
 #include <stdlib.h>
 #include <inttypes.h>
-#include <string.h>
 #include "doomgeneric.h"
+#include <string.h>
 
 #define SQUARE_COLOR 0xF800  /* red, RGB565 */
 
@@ -47,46 +47,31 @@ void stall(void)
 
 
 void DG_Init()
-{
-
-}
-
+{}
 void DG_DrawFrame()
-{
-	lcd_draw(SCREEN_START_X, SCREEN_START_Y, DOOMGENERIC_RESX, DOOMGENERIC_RESY, DG_ScreenBuffer);
-}
-
+{}
 void DG_SleepMs(uint32_t ms)
-{
-	vTaskDelay(pdMS_TO_TICKS(ms));
-}
-
+{}
 uint32_t DG_GetTicksMs()
 {
-	return xTaskGetTickCount();
+	return 0;
 }
-
 int DG_GetKey(int* pressed, unsigned char* key)
 {
 	return 0;
 }
-
 void DG_SetWindowTitle(const char * title)
-{
-	// Empty
-}
+{}
 
 void app_main(void)
 {
 	const char *argv[3] = {
 		"doomgeneric",
 		"-iwad",
-		"/sdcard/10M.wad"
+		"/sdcard/BLASPHEM.WAD"
 	};
 	int argc = 3;
 	int ret;
-
-	ESP_LOGE("", "Free MEM: %lu", sys_get_free_mem());
 
 	ret = lcd_init();
 	if (ret) {
@@ -110,20 +95,33 @@ void app_main(void)
 
 	while (1) {
 		doomgeneric_Tick();
+	
 	}
+
 }
-/* Biggest .bss
- visplanes    │ 84,992 B │ RAM (.bss)             │ r_plane.c │
-├──────────────┼──────────┼────────────────────────┼───────────┤
-│ finesine     │ 40,960 B │ flash (.rodata, const) │ tables.c  │
-├──────────────┼──────────┼────────────────────────┼───────────┤
-│ openings     │ 40,960 B │ RAM (.bss)             │ r_plane.c │
-├──────────────┼──────────┼────────────────────────┼───────────┤
-│ states       │ 27,076 B │ RAM (.data)            │ info.c    │
-├──────────────┼──────────┼────────────────────────┼───────────┤
-│ ticdata      │ 20,480 B │ RAM (.bss)             │ d_loop.c  │
-├──────────────┼──────────┼────────────────────────┼───────────┤
-│ finetangent  │ 16,384 B │ flash (const)          │ tables.c  │
-├──────────────┼──────────┼────────────────────────┼───────────┤
-│ viewangletox │ 16,384 B │ RAM (.bss)             │ r_main.c
- * */
+
+/*
+├────────────────┼─────────┼────────────────────────────────────────────────────────────┤
+│ visplanes      │   83 KB │ r_plane.c — visplane_t[MAXVISPLANES] (128 planes × ~664 B) │
+├────────────────┼─────────┼────────────────────────────────────────────────────────────┤
+│ openings       │   40 KB │ r_plane.c — MAXOPENINGS short array for visplane clipping  │
+├────────────────┼─────────┼────────────────────────────────────────────────────────────┤
+│ ticdata        │   20 KB │ d_loop.c — netgame tic command ring buffer (BACKUPTICS)    │
+├────────────────┼─────────┼────────────────────────────────────────────────────────────┤
+│ viewangletox   │   16 KB │ r_main.c — int[FINEANGLES/2] (2048 ints)                   │
+├────────────────┼─────────┼────────────────────────────────────────────────────────────┤
+│ drawsegs       │   12 KB │ r_bsp.c — drawseg_t[MAXDRAWSEGS]                           │
+├────────────────┼─────────┼────────────────────────────────────────────────────────────┤
+│ zlight         │    8 KB │ r_main.c — light-scale lookup [LIGHTLEVELS][MAXLIGHTZ]     │
+├────────────────┼─────────┼────────────────────────────────────────────────────────────┤
+│ vissprites     │  7.5 KB │ r_things.c — vissprite_t[MAXVISSPRITES]                    │
+├────────────────┼─────────┼────────────────────────────────────────────────────────────┤
+│ captured_stats │ 6.25 KB │ profiling/stats buffer                                     │
+├────────────────┼─────────┼────────────────────────────────────────────────────────────┤
+│ columnofs      │  4.4 KB │ r_draw.c — column offset table                             │
+├────────────────┼─────────┼────────────────────────────────────────────────────────────┤
+│ ylookup        │  3.3 KB │ r_draw.c — per-row framebuffer pointers                    │
+├────────────────┼─────────┼────────────────────────────────────────────────────────────┤
+│ scalelight     │    3 KB │ r_main.c — light-scale pointers                            │
+└────────────────┴─────────┴────────────────────────────────────────────────────────────┘
+*/
