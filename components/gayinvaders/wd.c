@@ -106,7 +106,7 @@ const asset_info_t *wd_get_asset_info(asset_type_t atype)
 	return &_asset_table[atype];
 }
 
-int wd_read_asset(asset_type_t atype, uint16_t *buffer, int offset, int sz)
+int wd_read_asset(asset_type_t atype, uint16_t *buffer, int xoff, int yoff, int w, int h)
 {
 	asset_info_t *ass = &_asset_table[atype];
 	uint8_t *buff;
@@ -119,22 +119,26 @@ int wd_read_asset(asset_type_t atype, uint16_t *buffer, int offset, int sz)
 		return -EIO;
 	}
 
-	fseek(f, _data_start + ass->offset + offset, SEEK_SET);
 
-	buff = gayinvaders_malloc(sz);
+	buff = gayinvaders_malloc(w*3);
 
-	fread(buff, 1, sz, f);
 
-	for (x = 0; x < ass->w; ++x) {
-		for (y = 0; y < ass->h; ++y) {
-			int index = (y*ass->w+x)*3;
-			uint8_t r = buff[index+0] / 8;
-			uint8_t g = buff[index+1] / 8;
-			uint8_t b = buff[index+2] / 8;
+	for (y = 0; y < h; ++y) {
+		int src_row = yoff + y;
+
+		fseek(f, _data_start + ass->offset + 3*(src_row*ass->w + xoff), SEEK_SET);
+		fread(buff, 1, w*3, f);
+
+		for (x = 0; x < w; ++x) {
+			int index = x*3;
+			uint8_t r = buff[index+0] / 8;	/* 8-bit -> 5-bit */
+			uint8_t g = buff[index+1] / 4;	/* 8-bit -> 6-bit */
+			uint8_t b = buff[index+2] / 8;	/* 8-bit -> 5-bit */
 
 			uint16_t pix = (r & 0x1f) | ((g & 0x3f)<<5) | ((b & 0x1f)<<11);
 
-			buffer[y*ass->w+x] = ((pix&0xFF)<< 8) | (pix >> 8);
+			/* stored MSB first */
+			buffer[y*w + x] = ((pix&0xFF)<< 8) | (pix >> 8);
 		}
 	}
 

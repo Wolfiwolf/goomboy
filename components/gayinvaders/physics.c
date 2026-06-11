@@ -5,7 +5,6 @@
 #include "llist.h"
 
 static llist_t _physics_objects;
-static size_t _prev_t;
 
 void physics_init(void)
 {
@@ -17,13 +16,9 @@ void physics_register(game_object_t *go)
 	llist_push_back(&_physics_objects, go);
 }
 
-void physics_update(void)
+void physics_update(float dt)
 {
 	llist_node_t *cur_node;
-	float dt;
-
-	dt = ((float)gayinvaders_get_ms() - (float)_prev_t) / 1000.0f;
-	_prev_t = gayinvaders_get_ms();
 
 	llist_for(_physics_objects, cur_node) {
 		game_object_t *po = cur_node->obj;

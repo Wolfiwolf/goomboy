@@ -87,25 +87,25 @@ static void _render_intro(void)
 	render_obj_t ro;
 	int x, y;
 
-	ro.buff = gayinvaders_malloc(64*2);
 
 	ro.w = 64;
-	ro.h = 64;
+	ro.h = 16;
 	ro.parent = &go;
 
-	for (x = 0; x < ass->w; x += 64*2) {
-		for (y = 0; y < ass->h; y += 64*2) {
-			printf("pos: (%d, %d)\n", x, y);
+	ro.buff = gayinvaders_malloc(ro.w*ro.h*2);
+
+	for (x = 0; x < ass->w; x += ro.w) {
+		for (y = 0; y < ass->h; y += ro.h) {
 			go.x = x;
 			go.y = y;
-			printf("pos: (%d, %d)\n", x, y);
-			wd_read_asset(ASSET_TYPE_INTRO, ro.buff, 2*y*x+2*x, 64*2);
-			printf("pos: (%d, %d)\n", x, y);
+			wd_read_asset(ASSET_TYPE_INTRO, ro.buff, x, y, ro.w, ro.h);
 			renderer_render(&ro);
 		}
 	}
 
 	gayinvaders_free(ro.buff);
+
+	renderer_flush();
 }
 
 void gayinvaders_main(int argc, char *argv[])
@@ -121,13 +121,13 @@ void gayinvaders_main(int argc, char *argv[])
 		return;
 
 	_render_intro();
-	gayinvaders_sleep_ms(2000);
+	gayinvaders_sleep_ms(8000);
 
 	ass_inf = wd_get_asset_info(ASSET_TYPE_PLAYER);
 	bull_ass_inf = wd_get_asset_info(ASSET_TYPE_BULLET);
 
 	_bullet_img = gayinvaders_malloc(bull_ass_inf->size);
-	wd_read_asset(ASSET_TYPE_BULLET, _bullet_img, 0, bull_ass_inf->size);
+	wd_read_asset(ASSET_TYPE_BULLET, _bullet_img, 0, 0, bull_ass_inf->w, bull_ass_inf->h);
 
 	_player.ro.buff = gayinvaders_malloc(ass_inf->size);
 	_player.ro.parent = &_player.go;
@@ -141,7 +141,7 @@ void gayinvaders_main(int argc, char *argv[])
 	_player.go.ay = 0.0;
 	_player.go.active = true;
 
-	wd_read_asset(ASSET_TYPE_PLAYER, _player.ro.buff, 0, ass_inf->size);
+	wd_read_asset(ASSET_TYPE_PLAYER, _player.ro.buff, 0, 0, ass_inf->w, ass_inf->h);
 
 	physics_init();
 	physics_register(&_player.go);
@@ -150,13 +150,15 @@ void gayinvaders_main(int argc, char *argv[])
 
 	timers_start(2000, NULL, _timer_end);
 
+	_prev_t = gayinvaders_get_ms();
+
 	for (;;) {
 		dt = ((float)gayinvaders_get_ms() - (float)_prev_t) / 1000.0f;
 		_prev_t = gayinvaders_get_ms();
 
 		inputs_update();
 
-		physics_update();
+		physics_update(dt);
 		timers_update(dt);
 		_game_loop();
 

@@ -26,6 +26,6 @@ int wd_init(const char *wd_fpath);
 
 const asset_info_t *wd_get_asset_info(asset_type_t atype);
 
-int wd_read_asset(asset_type_t atype, uint16_t *buffer, int offset, int sz);
+int wd_read_asset(asset_type_t atype, uint16_t *buffer, int xoff, int yoff, int w, int h);
 
 #endif

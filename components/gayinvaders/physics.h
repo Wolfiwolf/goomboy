@@ -7,6 +7,6 @@ void physics_init(void);
 
 void physics_register(game_object_t *pobj);
 
-void physics_update(void);
+void physics_update(float dt);
 
 #endif
