@@ -1,5 +1,7 @@
 #include "lcd.h"
 
+#include "esp_heap_caps.h"
+#include "esp_lcd_types.h"
 #include "freertos/FreeRTOS.h"
 #include "esp_lcd_panel_io.h"
 #include "esp_lcd_panel_ops.h"
@@ -8,6 +10,8 @@
 #include "driver/spi_master.h"
 #include "esp_err.h"
 #include "esp_log.h"
+#include "freertos/idf_additions.h"
+#include "freertos/projdefs.h"
 
 #define TAG "LCD"
 
@@ -60,7 +64,7 @@ int lcd_init(void)
 
 	esp_lcd_panel_dev_config_t panel_cfg = {
 	    .reset_gpio_num = LCD_RST,
-	    .rgb_ele_order = LCD_RGB_ELEMENT_ORDER_BGR,
+	    .rgb_ele_order = LCD_RGB_ELEMENT_ORDER_RGB,
 	    .bits_per_pixel = 16,
 	};
 
@@ -70,6 +74,8 @@ int lcd_init(void)
 	ESP_ERROR_CHECK(esp_lcd_panel_init(s_panel));
 	ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(s_panel, true));
 
+	esp_lcd_panel_swap_xy(s_panel, true);
+
 	gpio_set_level(LCD_BL, LCD_BL_ON);
 
 	return 0;
@@ -77,6 +83,21 @@ int lcd_init(void)
 
 int lcd_draw(int x, int y, int w, int h, const uint16_t *pixels)
 {
-	return esp_lcd_panel_draw_bitmap(s_panel, x, y, x + w, y + h,
-					 pixels);
+	return esp_lcd_panel_draw_bitmap(s_panel, x, y, x + w, y + h, pixels);
+}
+
+void lcd_clear(int CLEAR_SIZEX, int CLEAR_SIZEY)
+{
+	uint16_t *buffer = heap_caps_malloc(CLEAR_SIZEX*CLEAR_SIZEY*2, MALLOC_CAP_8BIT | MALLOC_CAP_DMA);
+	int x, y;
+
+	memset(buffer, 0, CLEAR_SIZEX*CLEAR_SIZEY*2);
+
+	for (x = 0; x < LCD_W_SIZE; x +=CLEAR_SIZEX) {
+		for (y = 0; y < LCD_H_SIZE; y +=CLEAR_SIZEY) {
+			lcd_draw(x, y, CLEAR_SIZEX, CLEAR_SIZEY, buffer);
+		}
+	}
+
+	heap_caps_free(buffer);
 }

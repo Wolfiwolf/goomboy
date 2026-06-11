@@ -8,8 +8,8 @@ idf_component_register(
 	"utils/queue.c"
 	"drivers/sdcard.c" 
 	#PRIV_REQUIRES spi_flash esp_lcd esp_lcd_st7796 esp_timer sdmmc fatfs esp_driver_i2c esp_pm prboom prboom-esp32-compat
-	PRIV_REQUIRES esp_lcd_st7796 esp_timer sdmmc fatfs esp_driver_i2c doomgeneric
-	INCLUDE_DIRS "../components/doomgeneric")
+	PRIV_REQUIRES esp_lcd_st7796 esp_timer sdmmc fatfs esp_driver_i2c gayinvaders
+	INCLUDE_DIRS "../components/gayinvaders")
 
 target_compile_options(${COMPONENT_LIB} PRIVATE -Wno-format)
 target_compile_options(${COMPONENT_LIB} PRIVATE -Wno-dangling-pointer)

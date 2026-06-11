@@ -15,14 +15,15 @@
 #include "utils/queue.h"
 #include <stdlib.h>
 #include <inttypes.h>
-#include "doomgeneric.h"
 #include <string.h>
+#include "gayinvaders.h"
+#include "inputs.h"
 
 #define SQUARE_COLOR 0xF800  /* red, RGB565 */
 
 /* Put game window in center of screen */
-#define SCREEN_START_X ((LCD_H_SIZE / 2) - (DOOMGENERIC_RESX / 2))
-#define SCREEN_START_Y ((LCD_W_SIZE / 2) - (DOOMGENERIC_RESY / 2))
+#define SCREEN_START_X ((LCD_W_SIZE / 2) - (SCREEN_W / 2))
+#define SCREEN_START_Y ((LCD_H_SIZE / 2) - (SCREEN_H / 2))
 
 #define BTN_QUEUE_MAX 16
 
@@ -34,7 +35,6 @@ typedef struct {
 static queue_t _btn_queue;
 static uint8_t _btn_queue_buffer[sizeof(btn_queue_element_t) * BTN_QUEUE_MAX];
 
-// static uint16_t _screen_buff[LCD_W_SIZE * LCD_H_SIZE];
 static uint16_t *_screen_buff;
 
 static uint16_t _prev_btn_map;
@@ -45,32 +45,63 @@ void stall(void)
 		vTaskDelay(pdMS_TO_TICKS(100));
 }
 
+void gayinvaders_render(const uint16_t ***screen_buff)
+{
+	int x,y;
 
-void DG_Init()
-{}
-void DG_DrawFrame()
-{}
-void DG_SleepMs(uint32_t ms)
-{}
-uint32_t DG_GetTicksMs()
-{
-	return 0;
+	for (x = 0; x < SCREEN_FRAMES_X; ++x) {
+		for (y = 0; y < SCREEN_FRAMES_Y; ++y) {
+			lcd_draw(
+				SCREEN_START_X+(x*(SCREEN_W/SCREEN_FRAMES_X)),
+				SCREEN_START_Y+(y*(SCREEN_H/SCREEN_FRAMES_Y)),
+				 SCREEN_W/SCREEN_FRAMES_X,
+				 SCREEN_H/SCREEN_FRAMES_Y, screen_buff[x][y]);
+		}
+	}
 }
-int DG_GetKey(int* pressed, unsigned char* key)
+
+size_t gayinvaders_get_ms(void)
 {
-	return 0;
+	return pdTICKS_TO_MS(xTaskGetTickCount());
 }
-void DG_SetWindowTitle(const char * title)
-{}
+
+void gayinvaders_sleep_ms(size_t ms)
+{
+	vTaskDelay(pdMS_TO_TICKS(ms));
+}
+
+input_state_t gayinvaders_get_input(input_t input)
+{
+	return INPUT_STATE_OFF;
+}
+
+void *gayinvaders_malloc(size_t sz)
+{
+	multi_heap_info_t meminfo;
+
+	heap_caps_get_info(&meminfo, MALLOC_CAP_8BIT);
+
+	ESP_LOGE("", "Free mem: %lu, big block: %lu, allocating: %lu", meminfo.total_free_bytes, meminfo.largest_free_block, sz);
+	void *ptr = heap_caps_malloc(sz, MALLOC_CAP_8BIT);
+
+	if (!ptr)
+		ESP_LOGE("", "MALLOC OF %lu FAILED!", sz);
+
+	return ptr;
+}
+
+void gayinvaders_free(void *ptr)
+{
+	heap_caps_free(ptr);
+}
 
 void app_main(void)
 {
 	const char *argv[3] = {
-		"doomgeneric",
-		"-iwad",
-		"/sdcard/BLASPHEM.WAD"
+		"gayinvaders",
+		"/sdcard/game.wd",
 	};
-	int argc = 3;
+	int argc = 2;
 	int ret;
 
 	ret = lcd_init();
@@ -78,6 +109,9 @@ void app_main(void)
 		ESP_LOGE("", "LCD init failed!");
 		stall();
 	}
+
+	lcd_clear(32, 32);
+	lcd_clear(16, 16);
 
 	ret = gpio_init();
 	if (ret) {
@@ -91,37 +125,5 @@ void app_main(void)
 		stall();
 	}
 
-	doomgeneric_Create(argc, argv);
-
-	while (1) {
-		doomgeneric_Tick();
-	
-	}
-
+	gayinvaders_main(argc, argv);
 }
-
-/*
-├────────────────┼─────────┼────────────────────────────────────────────────────────────┤
-│ visplanes      │   83 KB │ r_plane.c — visplane_t[MAXVISPLANES] (128 planes × ~664 B) │
-├────────────────┼─────────┼────────────────────────────────────────────────────────────┤
-│ openings       │   40 KB │ r_plane.c — MAXOPENINGS short array for visplane clipping  │
-├────────────────┼─────────┼────────────────────────────────────────────────────────────┤
-│ ticdata        │   20 KB │ d_loop.c — netgame tic command ring buffer (BACKUPTICS)    │
-├────────────────┼─────────┼────────────────────────────────────────────────────────────┤
-│ viewangletox   │   16 KB │ r_main.c — int[FINEANGLES/2] (2048 ints)                   │
-├────────────────┼─────────┼────────────────────────────────────────────────────────────┤
-│ drawsegs       │   12 KB │ r_bsp.c — drawseg_t[MAXDRAWSEGS]                           │
-├────────────────┼─────────┼────────────────────────────────────────────────────────────┤
-│ zlight         │    8 KB │ r_main.c — light-scale lookup [LIGHTLEVELS][MAXLIGHTZ]     │
-├────────────────┼─────────┼────────────────────────────────────────────────────────────┤
-│ vissprites     │  7.5 KB │ r_things.c — vissprite_t[MAXVISSPRITES]                    │
-├────────────────┼─────────┼────────────────────────────────────────────────────────────┤
-│ captured_stats │ 6.25 KB │ profiling/stats buffer                                     │
-├────────────────┼─────────┼────────────────────────────────────────────────────────────┤
-│ columnofs      │  4.4 KB │ r_draw.c — column offset table                             │
-├────────────────┼─────────┼────────────────────────────────────────────────────────────┤
-│ ylookup        │  3.3 KB │ r_draw.c — per-row framebuffer pointers                    │
-├────────────────┼─────────┼────────────────────────────────────────────────────────────┤
-│ scalelight     │    3 KB │ r_main.c — light-scale pointers                            │
-└────────────────┴─────────┴────────────────────────────────────────────────────────────┘
-*/
