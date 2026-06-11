@@ -6,6 +6,7 @@
 #define MAGENTA_COLOR 61502
 
 static uint16_t *_screen_buffers[SCREEN_FRAMES_X][SCREEN_FRAMES_Y];
+static bool _dont_flush = false;
 
 void renderer_init(void)
 {
@@ -85,10 +86,10 @@ void renderer_render(const render_obj_t *ro)
 
 void renderer_flush(void)
 {
-	/* gayinvaders_render() takes a uint16_t*** (a table of row pointers),
-	 * but _screen_buffers is a 2D array (uint16_t*[X][Y]) whose pointers sit
-	 * in one contiguous block. Build an actual array of row pointers so the
-	 * triple indirection resolves correctly. */
+	if (_dont_flush) {
+		_dont_flush = false;
+		return;
+	}
 	const uint16_t **rows[SCREEN_FRAMES_X];
 	int i;
 
@@ -96,4 +97,9 @@ void renderer_flush(void)
 		rows[i] = (const uint16_t **)_screen_buffers[i];
 
 	gayinvaders_render((const uint16_t ***)rows);
+}
+
+void renderer_dont_flush(void)
+{
+	_dont_flush = true;
 }

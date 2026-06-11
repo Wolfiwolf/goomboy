@@ -19,4 +19,6 @@ void renderer_render(const render_obj_t *ro);
 
 void renderer_flush(void);
 
+void renderer_dont_flush(void);
+
 #endif
