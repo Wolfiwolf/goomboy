@@ -89,17 +89,19 @@ static void _render_intro(void)
 
 
 	ro.w = 64;
-	ro.h = 16;
+	ro.h = 64;
 	ro.parent = &go;
 
 	ro.buff = gayinvaders_malloc(ro.w*ro.h*2);
 
+	renderer_clear();
 	for (x = 0; x < ass->w; x += ro.w) {
 		for (y = 0; y < ass->h; y += ro.h) {
-			go.x = x;
-			go.y = y;
+			go.x = x+(float)ro.w/2;
+			go.y = y+(float)ro.h/2;
 			wd_read_asset(ASSET_TYPE_INTRO, ro.buff, x, y, ro.w, ro.h);
 			renderer_render(&ro);
+			break;
 		}
 	}
 
@@ -120,8 +122,8 @@ void gayinvaders_main(int argc, char *argv[])
 	if (ret)
 		return;
 
-	_render_intro();
-	gayinvaders_sleep_ms(8000);
+	// _render_intro();
+	// gayinvaders_sleep_ms(8000);
 
 	ass_inf = wd_get_asset_info(ASSET_TYPE_PLAYER);
 	bull_ass_inf = wd_get_asset_info(ASSET_TYPE_BULLET);
