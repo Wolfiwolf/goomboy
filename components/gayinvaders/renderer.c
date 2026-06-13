@@ -60,8 +60,13 @@ void renderer_render(const render_obj_t *ro)
 
 		img_y = 0;
 
-		if (start_x < 0)
+		if (start_x < 0) {
+			img_x++;
 			continue;
+		}
+
+		if (start_x >= SCREEN_W)
+			break;
 
 		for (y = start_y; y < end_y; ++y) {
 			uint16_t pix;
@@ -71,6 +76,9 @@ void renderer_render(const render_obj_t *ro)
 				++img_y;
 				continue;
 			}
+
+			if (y >= SCREEN_H)
+				break;
 
 			pix = ro->buff[img_y * ro->w + img_x];
 

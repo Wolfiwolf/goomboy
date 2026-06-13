@@ -1,3 +1,4 @@
+#include "enemy.h"
 #include "llist.h"
 #include "scene.h"
 
@@ -23,29 +24,15 @@ typedef struct {
 	render_obj_t ro;
 } bullet_t;
 
-#define ENEMY_RO_LEFT  0
-#define ENEMY_RO_DOWN  1
-#define ENEMY_RO_RIGHT 2
-#define ENEMY_RO_CNT   3
-
-typedef struct {
-	game_object_t go;
-	render_obj_t ro[ENEMY_RO_CNT];
-	int health;
-} enemy_t;
-
 static uint16_t *_bullet_img;
-
-static uint16_t *_enemy_images[ENEMY_RO_CNT];
 
 static player_t _player;
 
-#define BULLET_SPEED      50
+#define BULLET_SPEED      300
 #define BULLETS_POOL_SIZE 50
 
 static bullet_t _bullets[BULLETS_POOL_SIZE] = {};
 
-#define ENEMY_SPEED      30
 #define ENEMY_POOL_SIZE  20
 static enemy_t _enemies[ENEMY_POOL_SIZE] = {};
 
@@ -109,9 +96,7 @@ static void _enemy_spawn_formation(int *formation)
 		if (!e)
 			continue;
 
-		e->go.x = start + i*100;
-		e->go.y = 0;
-		e->go.active = true;
+		enemy_activate(e, ENEMY_TYPE_EASY, start + i*100, -e->images[0].h);
 	}
 }
 
@@ -142,7 +127,7 @@ static void _init()
 	_player.ro.h = ass_inf->h;
 	_player.go.type = GAME_OBJECT_TYPE_PLAYER;
 	_player.go.x = (float)SCREEN_W / 2;
-	_player.go.y = (float)SCREEN_H - ass_inf->h;
+	_player.go.y = (float)SCREEN_H - ((float)ass_inf->h/4);
 	_player.go.vx = -100.0;
 	_player.go.vy = 0.0;
 	_player.go.ax = 0.0;
@@ -172,28 +157,12 @@ static void _init()
 
 	/* Enemy init */
 
-	ass_inf = wd_get_asset_info(ASSET_TYPE_PLAYER);
-	for (i = 0; i < ENEMY_RO_CNT; ++i) {
-		_enemy_images[i] = gayinvaders_malloc(ass_inf->size);
-		wd_read_asset(ASSET_TYPE_PLAYER, _enemy_images[i], 0, 0, ass_inf->w, ass_inf->h);
-	}
-
 	for (i = 0; i < ENEMY_POOL_SIZE; ++i) {
 		enemy_t *e = &_enemies[i];
-		int j;
 
-		e->go.type = GAME_OBJECT_TYPE_ENEMY;
-		e->go.vy = ENEMY_SPEED;
-		for (j = 0; j < ENEMY_RO_CNT; ++j) {
-			e->ro[j].parent = &e->go;
-			e->ro[j].w = ass_inf->w;
-			e->ro[j].h = ass_inf->h;
-			e->ro[j].buff = _enemy_images[j];
-		}
-
+		enemy_init(e);
 		physics_register(&e->go);
 	}
-
 
 	_shooting_tim = timers_start(2000, true, NULL, _shooting_timer_handler);
 	_enemy_spawner_tim = timers_start(2000, true, NULL, _enemy_spawner);
@@ -210,9 +179,10 @@ static void _update(float dt)
 	if (inputs_get(INPUT_RIGHT) == INPUT_STATE_ON)
 		_player.go.ax = 500.0f;
 
-	if (_player.go.x >= SCREEN_W-_player.ro.w/2) 
+	/* Player go left and right automaticly */
+	if (_player.go.x >= SCREEN_W-(float)_player.ro.w/2) 
 		_player.go.vx = -_player.go.vx;
-	if (_player.go.x <= 0+_player.ro.w/2) 
+	if (_player.go.x <= (float)_player.ro.w/2) 
 		_player.go.vx = -_player.go.vx;
 
 	for (i = 0; i < BULLETS_POOL_SIZE; ++i) {
@@ -226,9 +196,13 @@ static void _update(float dt)
 			b->go.active = false;
 	}
 
+	for (i = 0; i < ENEMY_POOL_SIZE; ++i)
+		enemy_update(&_enemies[i], dt);
+
+
 	renderer_render(&_player.ro);
 	for (i = 0; i < ENEMY_POOL_SIZE; ++i)
-		renderer_render(&_enemies[i].ro[1]);
+		renderer_render(&_enemies[i].images[1]);
 	for (i = 0; i < BULLETS_POOL_SIZE; ++i)
 		renderer_render(&_bullets[i].ro);
 }

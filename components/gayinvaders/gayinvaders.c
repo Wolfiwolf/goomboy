@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdio.h>
 #include "gayinvaders.h"
 #include "inputs.h"
 #include "physics.h"
@@ -7,7 +8,10 @@
 #include "timers.h"
 #include "wd.h"
 
+#define FREE_MEM_DISPLAY_INTERVAL 2000
+
 static float _prev_t = 0;
+static float _prev_mem_display_t = 0;
 
 void gayinvaders_main(int argc, char *argv[])
 {
@@ -34,6 +38,7 @@ void gayinvaders_main(int argc, char *argv[])
 	scenes[active_scene]->init();
 	
 	_prev_t = gayinvaders_get_ms();
+	_prev_mem_display_t = _prev_t;
 
 	for (;;) {
 
@@ -57,6 +62,11 @@ void gayinvaders_main(int argc, char *argv[])
 			scenes[active_scene]->end();
 			active_scene = new_scene;
 			scenes[active_scene]->init();
+		}
+
+		if (gayinvaders_get_ms() - _prev_mem_display_t > FREE_MEM_DISPLAY_INTERVAL) {
+			printf("Free mem: %lu\n", gayinvaders_free_mem());
+			_prev_mem_display_t = gayinvaders_get_ms();
 		}
 	}
 }
