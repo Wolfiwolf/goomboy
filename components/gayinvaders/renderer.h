@@ -21,4 +21,6 @@ void renderer_flush(void);
 
 void renderer_dont_flush(void);
 
+void renderer_buffer_unlock(void);
+
 #endif

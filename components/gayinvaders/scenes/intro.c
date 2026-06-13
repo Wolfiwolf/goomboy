@@ -4,6 +4,7 @@
 #include "scene.h"
 #include "timers.h"
 #include "wd.h"
+#include <stdio.h>
 
 static int _new_scene = -1;
 
@@ -44,7 +45,7 @@ static void _intro_end(void *data)
 static void _init()
 {
 	_render_intro();
-	timers_start(5000, NULL, _intro_end);
+	timers_start(2000, false, NULL, _intro_end);
 }
 
 static void _update(float dt)

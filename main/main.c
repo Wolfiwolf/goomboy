@@ -39,18 +39,39 @@ static uint16_t *_screen_buff;
 
 static uint16_t _prev_btn_map;
 
-void stall(void)
+static bool first = true;
+static int _buffers_transfering = 0;
+
+static void stall(void)
 {
 	while (1)
 		vTaskDelay(pdMS_TO_TICKS(100));
+}
+
+
+static void _lcd_buffer_transfered_handler(void)
+{
+	_buffers_transfering -= 1;
+
+	if (_buffers_transfering == 0)
+		gayinvaders_render_finished();
 }
 
 void gayinvaders_render(const uint16_t ***screen_buff)
 {
 	int x,y;
 
+	if (first) {
+		_buffers_transfering = 0;
+		first = false;
+	}
+
+	while (_buffers_transfering) { }
+
 	for (x = 0; x < SCREEN_FRAMES_X; ++x) {
 		for (y = 0; y < SCREEN_FRAMES_Y; ++y) {
+			_buffers_transfering += 1;
+
 			lcd_draw(
 				SCREEN_START_X+(x*(SCREEN_W/SCREEN_FRAMES_X)),
 				SCREEN_START_Y+(y*(SCREEN_H/SCREEN_FRAMES_Y)),
@@ -81,7 +102,7 @@ void *gayinvaders_malloc(size_t sz)
 
 	heap_caps_get_info(&meminfo, MALLOC_CAP_8BIT);
 
-	ESP_LOGE("", "Free mem: %lu, big block: %lu, allocating: %lu", meminfo.total_free_bytes, meminfo.largest_free_block, sz);
+	// ESP_LOGE("", "ALLOCATION: Free mem: %lu, big block: %lu, allocating: %lu", meminfo.total_free_bytes, meminfo.largest_free_block, sz);
 	void *ptr = heap_caps_malloc(sz, MALLOC_CAP_8BIT);
 
 	if (!ptr)
@@ -95,6 +116,11 @@ void gayinvaders_free(void *ptr)
 	heap_caps_free(ptr);
 }
 
+size_t gayinvaders_free_mem(void)
+{
+	return sys_get_free_mem();
+}
+
 void app_main(void)
 {
 	const char *argv[3] = {
@@ -104,7 +130,7 @@ void app_main(void)
 	int argc = 2;
 	int ret;
 
-	ret = lcd_init();
+	ret = lcd_init(_lcd_buffer_transfered_handler);
 	if (ret) {
 		ESP_LOGE("", "LCD init failed!");
 		stall();

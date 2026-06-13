@@ -3,7 +3,15 @@
 
 #include <stdbool.h>
 
+typedef enum {
+	GAME_OBJECT_TYPE_PLAYER,
+	GAME_OBJECT_TYPE_BULLET,
+	GAME_OBJECT_TYPE_ENEMY
+} game_object_type_t;
+
 typedef struct {
+	game_object_type_t type;
+
 	float x, y;
 	float vx, vy;
 	float ax, ay;

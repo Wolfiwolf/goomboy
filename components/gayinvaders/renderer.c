@@ -7,6 +7,7 @@
 
 static uint16_t *_screen_buffers[SCREEN_FRAMES_X][SCREEN_FRAMES_Y];
 static bool _dont_flush = false;
+static bool _buffer_lock = false;
 
 void renderer_init(void)
 {
@@ -25,6 +26,8 @@ void renderer_clear(void)
 {
 	int x, y;
 
+	while (_buffer_lock) { }
+
 	for (x = 0; x < SCREEN_FRAMES_X; ++x)
 		for (y = 0; y < SCREEN_FRAMES_Y; ++y)
 			memset(_screen_buffers[x][y], 0, (2 * (SCREEN_W/SCREEN_FRAMES_X) * (SCREEN_H/SCREEN_FRAMES_Y)));
@@ -36,6 +39,8 @@ void renderer_render(const render_obj_t *ro)
 	game_object_t *go;
 	int end_x, end_y;
 	int img_x, img_y;
+
+	while (_buffer_lock) { }
 
 	go = ro->parent;
 	if (!go->active)
@@ -86,20 +91,29 @@ void renderer_render(const render_obj_t *ro)
 
 void renderer_flush(void)
 {
+	const uint16_t **rows[SCREEN_FRAMES_X];
+	int i;
+
 	if (_dont_flush) {
 		_dont_flush = false;
 		return;
 	}
-	const uint16_t **rows[SCREEN_FRAMES_X];
-	int i;
+
+	while (_buffer_lock) { }
 
 	for (i = 0; i < SCREEN_FRAMES_X; ++i)
 		rows[i] = (const uint16_t **)_screen_buffers[i];
 
+	_buffer_lock = true;
 	gayinvaders_render((const uint16_t ***)rows);
 }
 
 void renderer_dont_flush(void)
 {
 	_dont_flush = true;
+}
+
+void renderer_buffer_unlock(void)
+{
+	_buffer_lock = false;
 }

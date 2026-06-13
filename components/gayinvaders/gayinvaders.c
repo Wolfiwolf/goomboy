@@ -1,7 +1,5 @@
-#include <stdio.h>
 #include <stdint.h>
 #include "gayinvaders.h"
-#include "gameobject.h"
 #include "inputs.h"
 #include "physics.h"
 #include "renderer.h"
@@ -18,6 +16,7 @@ void gayinvaders_main(int argc, char *argv[])
 		scenes_get_game_scene(),
 	};
 	int active_scene = 0;
+	int new_scene;
 	float dt;
 	int ret;
 
@@ -30,13 +29,13 @@ void gayinvaders_main(int argc, char *argv[])
 
 	physics_init();
 
+	renderer_clear();
 
 	scenes[active_scene]->init();
 	
 	_prev_t = gayinvaders_get_ms();
 
 	for (;;) {
-		int new_scene;
 
 		dt = ((float)gayinvaders_get_ms() - (float)_prev_t) / 1000.0f;
 		_prev_t = gayinvaders_get_ms();
@@ -51,7 +50,7 @@ void gayinvaders_main(int argc, char *argv[])
 		scenes[active_scene]->update(dt);
 
 		renderer_flush();
-		gayinvaders_sleep_ms(25);
+		gayinvaders_sleep_ms(15);
 
 		new_scene = scenes[active_scene]->change_scene();
 		if (new_scene > 0) {
@@ -60,4 +59,9 @@ void gayinvaders_main(int argc, char *argv[])
 			scenes[active_scene]->init();
 		}
 	}
+}
+
+void gayinvaders_render_finished(void)
+{
+	renderer_buffer_unlock();
 }

@@ -5,6 +5,8 @@
 
 typedef struct {
 	int duration;
+	int counter;
+	bool loop;
 	void *data;
 	void (*on_finish)(void *data);
 } timer_obj_t;
@@ -25,14 +27,18 @@ void timers_update(float dt)
 		timer_obj_t *tim = current->obj;
 		llist_node_t *tmp;
 
-		tim->duration -= dt * 1000; 
+		tim->counter -= dt * 1000; 
 
-		if (tim->duration > 0) {
+		if (tim->counter > 0) {
 			current = current->next;
 			continue;
 		}
 
 		tim->on_finish(tim->data);
+		if (tim->loop) {
+			tim->counter = tim->duration;
+			continue;
+		}
 
 		tmp = current;
 		current = current->next;
@@ -43,14 +49,28 @@ void timers_update(float dt)
 	}
 }
 
-void timers_start(int duration, void *data,
-		  void (*on_finish)(void *data))
+timer_handle_t *timers_start(int duration, bool loop,
+			     void *data, void (*on_finish)(void *data))
 {
 	timer_obj_t *tim = gayinvaders_malloc(sizeof(timer_obj_t));
 
 	tim->duration = duration;
+	tim->counter = duration;
+	tim->loop = loop;
 	tim->data = data;
 	tim->on_finish = on_finish;
 
 	llist_push_back(&_timers, tim);
+
+	return _timers.tail;
+}
+
+void timers_stop(timer_handle_t *tim_handle)
+{
+	llist_node_t *node = tim_handle;
+	timer_obj_t *tim = node->obj;
+
+	llist_remove_node(&_timers, node);
+
+	gayinvaders_free(tim);
 }

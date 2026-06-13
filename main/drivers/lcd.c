@@ -31,7 +31,18 @@
 
 static esp_lcd_panel_handle_t s_panel;
 
-int lcd_init(void)
+void (*_buffer_transfered_callback)(void);
+
+static bool lcd_on_trans_done(esp_lcd_panel_io_handle_t io,
+			      esp_lcd_panel_io_event_data_t *edata,
+			      void *user_ctx)
+{
+	if (_buffer_transfered_callback)
+		_buffer_transfered_callback();
+	return true;
+}
+
+int lcd_init(void (*buffer_transfered_callback)(void))
 {
 	gpio_config_t bl_cfg = {
 	    .mode = GPIO_MODE_OUTPUT,
@@ -59,7 +70,9 @@ int lcd_init(void)
 	    .lcd_param_bits = LCD_PARAM_BITS,
 	    .spi_mode = 0,
 	    .trans_queue_depth = 1,
+	    .on_color_trans_done = lcd_on_trans_done,
 	};
+
 	ESP_ERROR_CHECK(esp_lcd_new_panel_io_spi(LCD_HOST, &io_cfg, &io));
 
 	esp_lcd_panel_dev_config_t panel_cfg = {
@@ -78,12 +91,17 @@ int lcd_init(void)
 
 	gpio_set_level(LCD_BL, LCD_BL_ON);
 
+	_buffer_transfered_callback = buffer_transfered_callback;
+
 	return 0;
 }
 
 int lcd_draw(int x, int y, int w, int h, const uint16_t *pixels)
 {
-	return esp_lcd_panel_draw_bitmap(s_panel, x, y, x + w, y + h, pixels);
+	esp_err_t err = esp_lcd_panel_draw_bitmap(s_panel, x, y, x + w, y + h, pixels);
+	if (err != ESP_OK)
+		return err;
+	return ESP_OK;
 }
 
 void lcd_clear(int CLEAR_SIZEX, int CLEAR_SIZEY)
