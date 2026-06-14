@@ -89,6 +89,7 @@ input_state_t gayinvaders_get_input(input_t input)
 	size_t t = pdTICKS_TO_MS(xTaskGetTickCount());
 
 	// Shooting
+	/*
 	if (t - _prev_shoot_t > 550 && t - _prev_shoot_t < 650 ) {
 		if (input == INPUT_FIRE_NORMAL)
 			return INPUT_STATE_ON;
@@ -96,6 +97,7 @@ input_state_t gayinvaders_get_input(input_t input)
 
 	if (t - _prev_shoot_t > 1000)
 		_prev_shoot_t = t;
+		*/
 
 
 	// Moving

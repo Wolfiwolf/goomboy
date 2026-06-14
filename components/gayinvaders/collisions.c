@@ -51,7 +51,7 @@ void collision_update(void)
 	for (i = 0; i < _bullets_cnt; ++i) {
 		bullet_t *b = &_bullets[i];
 
-		if (!b->go.active)
+		if (!b->go.active || b->has_hit)
 			continue;
 
 		if (_player->go.active && b->damage_player) {
@@ -59,22 +59,6 @@ void collision_update(void)
 
 			if (dist < _player->collision_radius)
 				_on_collision_handler(_player, _player->go.type, b, b->go.type);
-		}
-
-		for (j = 0; j < _powerups_cnt; ++j) {
-			powerup_t *pu = &_powerups[j];
-			float dist;
-
-			if (!pu->go.active)
-				continue;
-
-			dist = _get_dist(&_player->go, &pu->go);
-
-			if (dist < _player->collision_radius+pu->collision_radius) {
-				_on_collision_handler(_player, _player->go.type,
-						      pu, pu->go.type);
-				break;
-			}
 		}
 
 		if (b->damage_player)
@@ -93,6 +77,22 @@ void collision_update(void)
 				_on_collision_handler(e, e->go.type, b, b->go.type);
 				break;
 			}
+		}
+	}
+
+	for (i = 0; i < _powerups_cnt; ++i) {
+		powerup_t *pu = &_powerups[i];
+		float dist;
+
+		if (!pu->go.active)
+			continue;
+
+		dist = _get_dist(&_player->go, &pu->go);
+
+		if (dist < _player->collision_radius+pu->collision_radius) {
+			_on_collision_handler(_player, _player->go.type,
+					      pu, pu->go.type);
+			break;
 		}
 	}
 

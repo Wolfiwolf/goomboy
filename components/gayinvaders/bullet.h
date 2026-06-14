@@ -22,6 +22,7 @@ typedef struct {
 	int damage;
 	int speed;
 	bool has_hit;
+	int collision_radius;
 
 	/* Flag so players bullets don't damage him */
 	bool damage_player;

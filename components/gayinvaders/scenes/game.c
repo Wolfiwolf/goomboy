@@ -145,14 +145,14 @@ static void _on_collision(void *obj1, game_object_type_t type1, void *obj2, game
 		enemy_t *e = obj1;
 
 		enemy_damage(e, b->damage);
-		bullet_diactivate(b);
+		bullet_hit(b);
 	}
 
 	if (type1 == GAME_OBJECT_TYPE_PLAYER) {
 		if (type2 == GAME_OBJECT_TYPE_BULLET) {
 			bullet_t *b = obj2;
 			_player.health -= b->damage;
-			bullet_diactivate(obj2);
+			bullet_hit(b);
 		} else if (type2 == GAME_OBJECT_TYPE_POWERUP) {
 			powerup_t *pu = obj2;
 
