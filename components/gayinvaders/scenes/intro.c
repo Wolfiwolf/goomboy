@@ -39,7 +39,7 @@ static void _render_intro(void)
 
 static void _intro_end(void *data)
 {
-	_new_scene = SCENE_TYPE_GAME;
+	_new_scene = SCENE_TYPE_MAINMENU;
 }
 
 static void _init()

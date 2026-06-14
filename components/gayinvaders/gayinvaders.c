@@ -17,6 +17,7 @@ void gayinvaders_main(int argc, char *argv[])
 {
 	scene_t *scenes[SCENE_TYPE_COUNT] = {
 		scenes_get_intro_scene(),
+		scenes_get_mainmenu_scene(),
 		scenes_get_game_scene(),
 		scenes_get_dead_scene(),
 	};

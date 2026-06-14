@@ -7,6 +7,7 @@
 
 static uint16_t *_screen_buffers[SCREEN_FRAMES_X][SCREEN_FRAMES_Y];
 static bool _dont_flush = false;
+static bool _flip_next = false;
 static bool _buffer_lock = false;
 
 void renderer_init(void)
@@ -80,7 +81,10 @@ void renderer_render(const render_obj_t *ro)
 			if (y >= SCREEN_H)
 				break;
 
-			pix = ro->buff[img_y * ro->w + img_x];
+			if (_flip_next)
+				pix = ro->buff[img_y * ro->w + (ro->w-img_x)];
+			else
+				pix = ro->buff[img_y * ro->w + img_x];
 
 			++img_y;
 
@@ -95,6 +99,8 @@ void renderer_render(const render_obj_t *ro)
 		}
 		++img_x;
 	}
+
+	_flip_next = false;
 }
 
 void renderer_flush(void)
@@ -124,4 +130,9 @@ void renderer_dont_flush(void)
 void renderer_buffer_unlock(void)
 {
 	_buffer_lock = false;
+}
+
+void renderer_flip_next(void)
+{
+	_flip_next = true;
 }

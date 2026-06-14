@@ -23,4 +23,6 @@ void renderer_dont_flush(void);
 
 void renderer_buffer_unlock(void);
 
+void renderer_flip_next(void);
+
 #endif
