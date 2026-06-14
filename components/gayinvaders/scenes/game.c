@@ -1,9 +1,16 @@
+#include "bullet.h"
+#include "collisions.h"
 #include "enemy.h"
+#include "hud.h"
 #include "llist.h"
+#include "player.h"
+#include "powerup.h"
 #include "scene.h"
 
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 #include "gayinvaders.h"
 #include "gameobject.h"
 #include "inputs.h"
@@ -14,60 +21,41 @@
 
 static int _new_scene = -1;
 
-typedef struct {
-	game_object_t go;
-	render_obj_t ro;
-} player_t;
-
-typedef struct {
-	game_object_t go;
-	render_obj_t ro;
-} bullet_t;
-
-static uint16_t *_bullet_img;
+#define PLAYER_SPEED 100
 
 static player_t _player;
+static hud_t _hud;
 
-#define BULLET_SPEED      300
 #define BULLETS_POOL_SIZE 50
-
 static bullet_t _bullets[BULLETS_POOL_SIZE] = {};
 
-#define ENEMY_POOL_SIZE  20
+#define POWERUP_POOL_SIZE 10
+static powerup_t _powerups[POWERUP_POOL_SIZE] = {};
+
+#define ENEMY_POOL_SIZE  15
 static enemy_t _enemies[ENEMY_POOL_SIZE] = {};
 
-static timer_handle_t *_shooting_tim;
-static timer_handle_t *_enemy_spawner_tim;
+static timer_handle_t *_enemy_spawner_tim = NULL;
+static timer_handle_t *_powerup_spawner_tim = NULL;
 
 static int _level = 1;
 static int _enemy_formation_index = 0;
 static int _enemy_formations[3][3] = {
-	{1, 0, 1},
 	{0, 1, 0},
-	{1, 1, 1},
+	{0, 1, 0},
+	{0, 1, 0},
 };
 
-static void _on_fire_handler(void)
+static bool _player_killed_triggered = false;
+
+static void _on_fire_normal_handler(void)
 {
-	int i;
-
-	for (i = 0; i < BULLETS_POOL_SIZE; ++i) {
-		bullet_t *b = &_bullets[i];
-
-		if (b->go.active)
-			continue;
-
-		b->go.active = true;
-
-		b->go.x = _player.go.x;
-		b->go.y = _player.go.y - (float)_player.ro.h/2 - (float)b->ro.h/2;
-		break;
-	}
+	player_fire(&_player, BULLET_TYPE_NORMAL, _bullets, BULLETS_POOL_SIZE);
 }
 
-static void _shooting_timer_handler(void *tmp)
+static void _on_fire_bomb_handler(void)
 {
-	_on_fire_handler();
+	player_fire(&_player, BULLET_TYPE_BOMB, _bullets, BULLETS_POOL_SIZE);
 }
 
 static enemy_t *_get_new_enemy(void)
@@ -81,145 +69,236 @@ static enemy_t *_get_new_enemy(void)
 	return NULL;
 }
 
-static void _enemy_spawn_formation(int *formation)
+static powerup_t *_get_new_powerup(void)
 {
 	int i;
 
-	for (i = 0; i < 3; ++i) {
-		int start = SCREEN_W / 4;
-		enemy_t *e;
+	for (i = 0; i < POWERUP_POOL_SIZE; ++i)
+		if (!_powerups[i].go.active)
+			return &_powerups[i];
 
-		if (!formation[i])
-			continue;
-
-		e = _get_new_enemy();
-		if (!e)
-			continue;
-
-		enemy_activate(e, ENEMY_TYPE_EASY, start + i*100, -e->images[0].h);
-	}
+	return NULL;
 }
 
 static void _enemy_spawner(void *data)
 {
-	if (_level == 1) {
-		_enemy_spawn_formation(_enemy_formations[_enemy_formation_index]);
-		_enemy_formation_index++;
-		if (_enemy_formation_index == 3)
-			_level++;
+	enemy_t *e = _get_new_enemy();
+	if (!e)
+		return;
+
+
+	enemy_activate(e, ENEMY_TYPE_EASY, -1, -e->images[0].h);
+}
+
+static void _powerup_spawner(void *data)
+{
+	powerup_type_t pu_type;
+	powerup_t *pu;
+
+	pu = _get_new_powerup();
+	if (!pu)
+		return;
+
+	pu_type = rand() % POWERUP_TYPE_CNT;
+
+	// powerup_activate(pu, pu_type, SCREEN_W_HALF, -pu->ro.h);
+	powerup_activate(pu, POWERUP_TYPE_BOMB, SCREEN_W_HALF, -pu->ro.h);
+}
+
+static void _end_game(void *data)
+{
+	_new_scene = SCENE_TYPE_DEAD;
+}
+
+static void _kill_enemy(void *enemy)
+{
+	enemy_diactivate(enemy);
+}
+
+static void _player_killed(void)
+{
+	if (_player_killed_triggered)
+		return;
+
+	_player_killed_triggered = true;
+
+	if (_enemy_spawner_tim)
+		timers_stop(_enemy_spawner_tim);
+	if (_powerup_spawner_tim)
+		timers_stop(_powerup_spawner_tim);
+
+	_enemy_spawner_tim = NULL;
+	_powerup_spawner_tim = NULL;
+
+	timers_start(3000, false, NULL, _end_game);
+}
+
+static void _shoot_bomb(void *data)
+{
+	_on_fire_bomb_handler();
+}
+
+static void _on_collision(void *obj1, game_object_type_t type1, void *obj2, game_object_type_t type2)
+{
+	if (type1 == GAME_OBJECT_TYPE_ENEMY) {
+		bullet_t *b = obj2;
+		enemy_t *e = obj1;
+
+		enemy_damage(e, b->damage);
+		bullet_diactivate(b);
+	}
+
+	if (type1 == GAME_OBJECT_TYPE_PLAYER) {
+		if (type2 == GAME_OBJECT_TYPE_BULLET) {
+			bullet_t *b = obj2;
+			_player.health -= b->damage;
+			bullet_diactivate(obj2);
+		} else if (type2 == GAME_OBJECT_TYPE_POWERUP) {
+			powerup_t *pu = obj2;
+
+			if (pu->type == POWERUP_TYPE_HEALTH)
+				_player.health += 1;
+			else if (pu->type == POWERUP_TYPE_BOMB)
+				timers_start(100, false, NULL, _shoot_bomb);
+
+			powerup_diactivate(pu);
+		}
 	}
 }
 
 static void _init()
 {
-	const asset_info_t *ass_inf;
 	int i;
 
 	/* Set input handlers */
-	inputs_set_on_handler(INPUT_FIRE, _on_fire_handler);
+	inputs_set_on_handler(INPUT_FIRE_NORMAL, _on_fire_normal_handler);
+	inputs_set_on_handler(INPUT_FIRE_BOMB, _on_fire_normal_handler);
 
-	/* Player init */
-	ass_inf = wd_get_asset_info(ASSET_TYPE_PLAYER);
+	player_init(&_player, SCREEN_W / 4, SCREEN_H-32);
 
-	_player.ro.buff = gayinvaders_malloc(ass_inf->size);
-	_player.ro.parent = &_player.go;
-	_player.ro.w = ass_inf->w;
-	_player.ro.h = ass_inf->h;
-	_player.go.type = GAME_OBJECT_TYPE_PLAYER;
-	_player.go.x = (float)SCREEN_W / 2;
-	_player.go.y = (float)SCREEN_H - ((float)ass_inf->h/4);
-	_player.go.vx = -100.0;
-	_player.go.vy = 0.0;
-	_player.go.ax = 0.0;
-	_player.go.ay = 0.0;
-	_player.go.active = true;
+	memset(_bullets, 0, sizeof(_bullets));
+	for (i = 0; i < BULLETS_POOL_SIZE; ++i)
+		bullet_init(&_bullets[i]);
 
-	wd_read_asset(ASSET_TYPE_PLAYER, _player.ro.buff, 0, 0, ass_inf->w, ass_inf->h);
-	physics_register(&_player.go);
+	memset(_enemies, 0, sizeof(_enemies));
+	for (i = 0; i < ENEMY_POOL_SIZE; ++i)
+		enemy_init(&_enemies[i]);
 
-	/* Bullet init */
-	ass_inf = wd_get_asset_info(ASSET_TYPE_BULLET);
-	_bullet_img = gayinvaders_malloc(ass_inf->size);
-	wd_read_asset(ASSET_TYPE_BULLET, _bullet_img, 0, 0, ass_inf->w, ass_inf->h);
+	memset(_powerups, 0, sizeof(_powerups));
+	for (i = 0; i < POWERUP_POOL_SIZE; ++i)
+		powerup_init(&_powerups[i]);
 
-	for (i = 0; i < BULLETS_POOL_SIZE; ++i) {
-		bullet_t *b = &_bullets[i];
+	hud_init(&_hud, 50, SCREEN_H - 8);
 
-		b->go.type = GAME_OBJECT_TYPE_BULLET;
-		b->go.vy = -BULLET_SPEED;
-		b->ro.parent = &b->go;
-		b->ro.w = ass_inf->w;
-		b->ro.h = ass_inf->h;
-		b->ro.buff = _bullet_img;
+	collisions_init(&_player,
+			_bullets, BULLETS_POOL_SIZE,
+			_enemies, ENEMY_POOL_SIZE,
+			_powerups, POWERUP_POOL_SIZE,
+			_on_collision);
 
-		physics_register(&b->go);
-	}
+	_enemy_spawner_tim = timers_start(4000, true, NULL, _enemy_spawner);
+	_powerup_spawner_tim = timers_start(5000, true, NULL, _powerup_spawner);
 
-	/* Enemy init */
-
-	for (i = 0; i < ENEMY_POOL_SIZE; ++i) {
-		enemy_t *e = &_enemies[i];
-
-		enemy_init(e);
-		physics_register(&e->go);
-	}
-
-	_shooting_tim = timers_start(2000, true, NULL, _shooting_timer_handler);
-	_enemy_spawner_tim = timers_start(2000, true, NULL, _enemy_spawner);
+	_level = 1;
+	_player_killed_triggered = false;
 }
 
 static void _update(float dt)
 {
 	int i;
 
-	_player.go.ax = 0.0f;
-	if (inputs_get(INPUT_LEFT) == INPUT_STATE_ON)
-		_player.go.ax = -500.0f;
-
-	if (inputs_get(INPUT_RIGHT) == INPUT_STATE_ON)
-		_player.go.ax = 500.0f;
-
-	/* Player go left and right automaticly */
-	if (_player.go.x >= SCREEN_W-(float)_player.ro.w/2) 
-		_player.go.vx = -_player.go.vx;
-	if (_player.go.x <= (float)_player.ro.w/2) 
-		_player.go.vx = -_player.go.vx;
-
-	for (i = 0; i < BULLETS_POOL_SIZE; ++i) {
-		bullet_t *b = &_bullets[i];
-
-		if (!b->go.active)
-			continue;
-
-		/* Disable bullet if out of screen */
-		if (b->go.y < 0 - b->ro.h)
-			b->go.active = false;
+	// Inputs
+	if (!_player.dead) {
+		player_go_stop(&_player);
+		if (inputs_get(INPUT_LEFT) == INPUT_STATE_ON)
+			player_go_left(&_player);
+		if (inputs_get(INPUT_RIGHT) == INPUT_STATE_ON)
+			player_go_right(&_player);
 	}
 
-	for (i = 0; i < ENEMY_POOL_SIZE; ++i)
-		enemy_update(&_enemies[i], dt);
+	player_update(&_player, dt);
 
+	if (_player.dead) {
+		_player_killed();
+	} else {
+		physics_update(&_player.go, dt);
+		for (i = 0; i < ENEMY_POOL_SIZE; ++i) {
+			enemy_t *e = &_enemies[i];
+			if (!e->go.active)
+				continue;
+
+			enemy_update(e, dt, _bullets, BULLETS_POOL_SIZE, &_player.go);
+			if (e->go.y >= SCREEN_H- (float)e->images[0].h/2) {
+				_player.health -= 3;
+				enemy_kill(e);
+			}
+		}
+		for (i = 0; i < BULLETS_POOL_SIZE; ++i)
+			bullet_update(&_bullets[i], dt);
+		for (i = 0; i < POWERUP_POOL_SIZE; ++i)
+			powerup_update(&_powerups[i], dt);
+
+		collision_update();
+	}
+
+	hud_update(&_hud, _player.health, true);
+}
+
+static void _render(void)
+{
+	int i;
+
+	for (i = 0; i < ENEMY_POOL_SIZE; ++i) {
+		enemy_t *e = &_enemies[i];
+		renderer_render(&e->images[e->active_image]);
+	}
 
 	renderer_render(&_player.ro);
-	for (i = 0; i < ENEMY_POOL_SIZE; ++i)
-		renderer_render(&_enemies[i].images[1]);
-	for (i = 0; i < BULLETS_POOL_SIZE; ++i)
-		renderer_render(&_bullets[i].ro);
+
+	for (i = 0; i < BULLETS_POOL_SIZE; ++i) renderer_render(&_bullets[i].ro);
+	for (i = 0; i < POWERUP_POOL_SIZE; ++i) renderer_render(&_powerups[i].ro);
+	hud_render(&_hud);
 }
 
 static void _end()
 {
-	timers_stop(_shooting_tim);
+	int i;
+	
+	for (i = 0; i < BULLETS_POOL_SIZE; ++i) {
+		bullet_t *b = &_bullets[i];
+
+		bullet_diactivate(b);
+		bullet_destroy(b);
+	}
+
+	for (i = 0; i < POWERUP_POOL_SIZE; ++i) {
+		powerup_t *pu = &_powerups[i];
+
+		powerup_diactivate(pu);
+		powerup_destroy(pu);
+	}
+
+	for (i = 0; i < ENEMY_POOL_SIZE; ++i) {
+		enemy_t *e = &_enemies[i];
+
+		enemy_diactivate(e);
+		enemy_destroy(e);
+	}
+
+	player_destroy(&_player);
 }
 
 static int _change_scene(void)
 {
-	return _new_scene;
+	int tmp = _new_scene;
+	_new_scene = -1;
+	return tmp;
 }
 
 static scene_t _game_scene = {
 	.init = _init,
 	.update = _update,
+	.render = _render,
 	.end = _end,
 	.change_scene = _change_scene,
 };

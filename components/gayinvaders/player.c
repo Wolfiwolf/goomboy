@@ -1,0 +1,91 @@
+#include <string.h>
+#include "player.h"
+#include "bullet.h"
+#include "gayinvaders.h"
+#include "physics.h"
+#include "wd.h"
+
+#define SPEEDX 50
+
+void player_init(player_t *p, int x, int y)
+{
+	const asset_info_t *ass_inf;
+
+	/* Player init */
+	ass_inf = wd_get_asset_info(ASSET_TYPE_PLAYER);
+
+	memset(p, 0, sizeof(player_t));
+	p->ro.buff = gayinvaders_malloc(ass_inf->h*ass_inf->w*2);
+	p->ro.parent = &p->go;
+	p->ro.w = ass_inf->w;
+	p->ro.h = ass_inf->h;
+	p->go.type = GAME_OBJECT_TYPE_PLAYER;
+	p->go.x = x;
+	p->go.y = y;
+	p->go.vx = 0;
+	p->go.vy = 0.0;
+	p->go.ax = 0.0;
+	p->go.ay = 0.0;
+	p->health = 5;
+	p->collision_radius = p->ro.w / 2;
+	p->go.active = true;
+
+	wd_read_asset(ASSET_TYPE_PLAYER, p->ro.buff, 0, 0, ass_inf->w, ass_inf->h);
+}
+
+void player_destroy(player_t *p)
+{
+	gayinvaders_free(p->ro.buff);
+}
+
+void player_update(player_t *p, float dt)
+{
+	if (p->dead)
+		return;
+
+	physics_update(&p->go, dt);
+	if (p->health <= 0)
+		p->dead = true;
+}
+
+void player_go_stop(player_t *p)
+{
+	p->go.vx = 0;
+}
+
+void player_go_left(player_t *p)
+{
+	p->go.vx = -SPEEDX;
+}
+
+void player_go_right(player_t *p)
+{
+	p->go.vx = SPEEDX;
+}
+
+void player_fire(player_t *p, bullet_type_t bullet_type,
+		 bullet_t *bullets, int bullets_cnt)
+{
+	int i;
+
+	if (p->dead)
+		return;
+
+	// Is it a player bullet
+	if (bullet_type < BULLET_TYPE_NORMAL ||
+	    bullet_type >= BULLET_PLAYER_SPECIAL_CNT+1)
+		return;
+
+	for (i = 0; i < bullets_cnt; ++i) {
+		bullet_t *b = &bullets[i];
+
+		if (b->go.active)
+			continue;
+
+		bullet_activate(b, bullet_type, p->go.x, p->go.y,
+				p->go.x, p->go.y-10, false);
+
+		p->ammo[bullet_type-BULLET_PLAYER_SPECIAL_START] -= 1;
+		break;
+	}
+}

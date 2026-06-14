@@ -4,17 +4,15 @@
 #include "scene.h"
 #include "timers.h"
 #include "wd.h"
-#include <stdio.h>
 
 static int _new_scene = -1;
 
-static void _render_intro(void)
+static void _render_dead(void)
 {
 	const asset_info_t *ass = wd_get_asset_info(ASSET_TYPE_INTRO);
 	game_object_t go;
 	render_obj_t ro;
 	int x, y;
-
 
 	ro.w = ass->w;
 	ro.h = 16;
@@ -37,28 +35,30 @@ static void _render_intro(void)
 	renderer_flush();
 }
 
-static void _intro_end(void *data)
+static void _dead_end(void *data)
 {
 	_new_scene = SCENE_TYPE_GAME;
 }
 
 static void _init()
 {
-	_render_intro();
-	timers_start(2000, false, NULL, _intro_end);
+	_render_dead();
+	timers_start(2000, false, NULL, _dead_end);
 }
 
 static int _change_scene(void)
 {
-	return _new_scene;
+	int tmp = _new_scene;
+	_new_scene = -1;
+	return tmp;
 }
 
-static scene_t _intro_scene = {
+static scene_t _dead_scene = {
 	.init = _init,
 	.change_scene = _change_scene,
 };
 
-scene_t *scenes_get_intro_scene(void)
+scene_t *scenes_get_dead_scene(void)
 {
-	return &_intro_scene;
+	return &_dead_scene;
 }

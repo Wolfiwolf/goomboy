@@ -13,27 +13,16 @@
 #include "freertos/projdefs.h"
 #include "system.h"
 #include "utils/queue.h"
+#include <stddef.h>
 #include <stdlib.h>
 #include <inttypes.h>
 #include <string.h>
 #include "gayinvaders.h"
 #include "inputs.h"
 
-#define SQUARE_COLOR 0xF800  /* red, RGB565 */
-
 /* Put game window in center of screen */
 #define SCREEN_START_X ((LCD_W_SIZE / 2) - (SCREEN_W / 2))
 #define SCREEN_START_Y ((LCD_H_SIZE / 2) - (SCREEN_H / 2))
-
-#define BTN_QUEUE_MAX 16
-
-typedef struct {
-	int pressed;
-	unsigned char key;
-} btn_queue_element_t;
-
-static queue_t _btn_queue;
-static uint8_t _btn_queue_buffer[sizeof(btn_queue_element_t) * BTN_QUEUE_MAX];
 
 static uint16_t *_screen_buff;
 
@@ -91,8 +80,35 @@ void gayinvaders_sleep_ms(size_t ms)
 	vTaskDelay(pdMS_TO_TICKS(ms));
 }
 
+static bool dir = true;
+static size_t _prev_t;
+static size_t _prev_shoot_t;
+
 input_state_t gayinvaders_get_input(input_t input)
 {
+	size_t t = pdTICKS_TO_MS(xTaskGetTickCount());
+
+	// Shooting
+	if (t - _prev_shoot_t > 550 && t - _prev_shoot_t < 650 ) {
+		if (input == INPUT_FIRE_NORMAL)
+			return INPUT_STATE_ON;
+	}
+
+	if (t - _prev_shoot_t > 1000)
+		_prev_shoot_t = t;
+
+
+	// Moving
+	if (t - _prev_t > 3000) {
+		dir = !dir;
+		_prev_t = t;
+	}
+
+	if (dir && input == INPUT_LEFT)
+		return INPUT_STATE_ON;
+	else if (!dir && input == INPUT_RIGHT)
+		return INPUT_STATE_ON;
+
 	return INPUT_STATE_OFF;
 }
 
@@ -130,6 +146,7 @@ void app_main(void)
 	int argc = 2;
 	int ret;
 
+
 	ret = lcd_init(_lcd_buffer_transfered_handler);
 	if (ret) {
 		ESP_LOGE("", "LCD init failed!");
@@ -150,6 +167,11 @@ void app_main(void)
 		ESP_LOGE("", "SD card mount failed! Is DOOM1.WAD on a FAT-formatted card?");
 		stall();
 	}
+
+	srand(xTaskGetTickCount());
+
+	_prev_t = pdTICKS_TO_MS(xTaskGetTickCount());
+	_prev_shoot_t = pdTICKS_TO_MS(xTaskGetTickCount());
 
 	gayinvaders_main(argc, argv);
 }

@@ -15,11 +15,22 @@ static const char *_asset_names[ASSET_TYPE_COUNT] = {
 	"LEFTSIDE",
 	"RIGHTSIDE",
 	"PLAYER",
-	"BULLET"
+	"ENEMYEASYIDLE",
+	"ENEMYEASYSHOOT",
+	"ENEMYEASYPAIN",
+	"BULLETNORMAL",
+	"BULLETBOMB",
+	"ENEMYBULLETNORMAL",
+	"BULLETNORMALHIT",
+	"BULLETBOMBHIT",
+	"ENEMYBULLETNORMALHIT",
+	"HEALTHBARBLOCK",
+	"AMMO0",
+	"POWERUPHEALTH",
+	"POWERUPBOMB",
 };
 
 static const char *_wd_filepath;
-
 
 static asset_type_t _name_to_asset_type(char *name)
 {

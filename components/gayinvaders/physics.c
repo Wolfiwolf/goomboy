@@ -4,41 +4,19 @@
 #include "gayinvaders.h"
 #include "llist.h"
 
-static llist_t _physics_objects;
-
 void physics_init(void)
 {
-	llist_init(&_physics_objects);
+	// Empty
 }
 
-void physics_register(game_object_t *go)
+void physics_update(game_object_t *go, float dt)
 {
-	llist_push_back(&_physics_objects, go);
-}
+	go->vx -= dt * go->resistance * go->vx;
+	go->vy -= dt * go->resistance * go->vy;
 
-void physics_update(float dt)
-{
-	llist_node_t *cur_node;
+	go->vx += dt * go->ax;
+	go->vy += dt * go->ay;
 
-	llist_for(_physics_objects, cur_node) {
-		game_object_t *po = cur_node->obj;
-
-		if (!po->active)
-			continue;
-
-		po->vx -= dt * po->resistance * po->vx;
-		po->vy -= dt * po->resistance * po->vy;
-
-		po->vx += dt * po->ax;
-		po->vy += dt * po->ay;
-
-		po->x += dt * po->vx;
-		po->y += dt * po->vy;
-
-		/*
-		printf("pos: (%.3f, %.3f)\n", po->x, po->y);
-		printf("vel: (%.3f, %.3f)\n", po->vx, po->vy);
-		printf("acc: (%.3f, %.3f)\n", po->ax, po->ay);
-		*/
-	}
+	go->x += dt * go->vx;
+	go->y += dt * go->vy;
 }

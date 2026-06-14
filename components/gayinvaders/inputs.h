@@ -9,7 +9,8 @@ typedef enum {
 typedef enum {
 	INPUT_LEFT,
 	INPUT_RIGHT,
-	INPUT_FIRE,
+	INPUT_FIRE_NORMAL,
+	INPUT_FIRE_BOMB,
 	INPUT_SHIELD,
 	INPUT_COUNT,
 } input_t;
