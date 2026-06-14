@@ -52,7 +52,6 @@ void gayinvaders_main(int argc, char *argv[])
 
 		timers_update(dt);
 
-
 		if (scenes[active_scene]->update)
 			scenes[active_scene]->update(dt);
 
@@ -68,6 +67,7 @@ void gayinvaders_main(int argc, char *argv[])
 		if (new_scene > 0) {
 			if (scenes[active_scene]->end)
 				scenes[active_scene]->end();
+			printf("Change scene free mem: %lu\n", gayinvaders_free_mem());
 			active_scene = new_scene;
 			if (scenes[active_scene]->init)
 				scenes[active_scene]->init();

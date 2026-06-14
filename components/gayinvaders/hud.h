@@ -19,7 +19,7 @@ typedef struct {
 
 typedef struct {
 	hud_health_block_t blocks[HUD_HEALTHBAR_BLOCKS];
-	hud_ammo_t ammos[BULLET_TYPE_CNT-1];
+	hud_ammo_t ammos[BULLET_PLAYER_SPECIAL_CNT];
 } hud_t;
 
 void hud_init(hud_t *hb, int x, int y);

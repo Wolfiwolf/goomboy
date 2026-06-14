@@ -48,16 +48,22 @@ void bullet_destroy(bullet_t *b)
 		if (_bullet_img[i]) {
 			_bullet_img_consumers[i] -= 1;
 			if (_bullet_img_consumers[i] == 0) {
-				gayinvaders_free(_bullet_img[i]);
-				_bullet_img[i] = NULL;
+				if (_bullet_img[i]) {
+					printf("Freed bullet %d\n", i);
+					gayinvaders_free(_bullet_img[i]);
+					_bullet_img[i] = NULL;
+				}
 			}
 		}
 
 		if (_bullet_hit_img[i]) {
 			_bullet_hit_img_consumers[i] -= 1;
 			if (_bullet_hit_img_consumers[i] == 0) {
-				gayinvaders_free(_bullet_hit_img[i]);
-				_bullet_hit_img[i] = NULL;
+				if (_bullet_hit_img[i]) {
+					printf("Freed bullet hit %d\n", i);
+					gayinvaders_free(_bullet_hit_img[i]);
+					_bullet_hit_img[i] = NULL;
+				}
 			}
 		}
 	}
@@ -80,8 +86,7 @@ static void _get_dir(float ox, float oy, float tx, float ty,
 }
 
 void bullet_activate(bullet_t *b, bullet_type_t type,
-		     int x, int y, int targetx, int targety,
-		     bool damage_player)
+		     int x, int y, int targetx, int targety)
 {
 	const asset_info_t *ass_inf;
 	asset_type_t ass_type;
@@ -108,19 +113,19 @@ void bullet_activate(bullet_t *b, bullet_type_t type,
 	// Setup
 	_get_dir(x, y, targetx, targety, &dirx, &diry);
 
+	// Render
 	b->ro.w = ass_inf->w;
 	b->ro.h = ass_inf->h;
 	b->ro.buff = _bullet_img[type];
 
+	// Bullet specifics
 	b->type = type;
 	b->speed = _configs[type].speed;
 	b->damage = _configs[type].damage;
 	b->has_hit = false;
-
-	b->damage_player = damage_player;
-
 	b->collision_radius = ass_inf->w/2;
 
+	// Position
 	b->go.x = x;
 	b->go.y = y;
 
@@ -166,4 +171,10 @@ void bullet_hit(bullet_t *b)
 	b->ro.buff = _bullet_hit_img[b->type];
 
 	timers_start(1000, false, b, _diactivate);
+}
+
+bool bullet_is_players(bullet_type_t btype)
+{
+	return btype >= BULLET_TYPE_NORMAL &&
+	       btype < BULLET_TYPE_ENEMY_NORMAL;
 }

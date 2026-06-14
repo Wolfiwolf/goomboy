@@ -7,6 +7,8 @@
 
 #define ENEMY_X_POS_RANDOM -1
 
+#define ENEMY_MAX_HEALTH 5
+
 typedef enum {
 	ENEMY_TYPE_EASY = 0,
 	ENEMY_TYPE_MID,
@@ -23,10 +25,17 @@ typedef enum {
 } enemy_img_t;
 
 typedef struct {
+	game_object_t go;
+	render_obj_t ro;
+} enemy_health_block_t;
+
+typedef struct {
 	enemy_type_t enemy_type;
 	game_object_t go;
 	render_obj_t images[ENEMY_IMG_CNT];
 	enemy_img_t active_image;
+
+	enemy_health_block_t health_blocks[ENEMY_MAX_HEALTH];
 
 	bool dead;
 
@@ -46,6 +55,8 @@ void enemy_destroy(enemy_t *e);
 void enemy_update(enemy_t *e, float dt,
 		  bullet_t *bullets, int bullets_cnt,
 		  game_object_t *player_go);
+
+void enemy_render(enemy_t *e);
 
 void enemy_activate(enemy_t *e, enemy_type_t type,
 		    int x, int y);

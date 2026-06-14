@@ -62,6 +62,8 @@ void hud_update(hud_t *hb, int health, bool bomb)
 
 	for (i = 0; i < HUD_HEALTHBAR_BLOCKS; ++i)
 		hb->blocks[i].go.active = i+1 <= health;
+
+	hb->ammos[BULLET_TYPE_BOMB-BULLET_PLAYER_SPECIAL_START].go.active = bomb;
 }
 
 void hud_render(hud_t *hb)
@@ -72,5 +74,5 @@ void hud_render(hud_t *hb)
 		renderer_render(&hb->blocks[i].ro);
 
 	for (i = 0; i < BULLET_PLAYER_SPECIAL_CNT; ++i)
-		renderer_render(&hb->ammos[i].ro);
+	 	renderer_render(&hb->ammos[i].ro);
 }

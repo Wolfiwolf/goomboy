@@ -86,7 +86,6 @@ static void _enemy_spawner(void *data)
 	if (!e)
 		return;
 
-
 	enemy_activate(e, ENEMY_TYPE_EASY, -1, -e->images[0].h);
 }
 
@@ -158,8 +157,10 @@ static void _on_collision(void *obj1, game_object_type_t type1, void *obj2, game
 
 			if (pu->type == POWERUP_TYPE_HEALTH)
 				_player.health += 1;
-			else if (pu->type == POWERUP_TYPE_BOMB)
-				timers_start(100, false, NULL, _shoot_bomb);
+			else if (pu->type == POWERUP_TYPE_BOMB) {
+				_player.ammo[BULLET_TYPE_BOMB - BULLET_PLAYER_SPECIAL_START] += 1;
+				timers_start(1000, false, NULL, _shoot_bomb);
+			}
 
 			powerup_diactivate(pu);
 		}
@@ -196,7 +197,7 @@ static void _init()
 			_powerups, POWERUP_POOL_SIZE,
 			_on_collision);
 
-	_enemy_spawner_tim = timers_start(4000, true, NULL, _enemy_spawner);
+	_enemy_spawner_tim = timers_start(6000, true, NULL, _enemy_spawner);
 	_powerup_spawner_tim = timers_start(5000, true, NULL, _powerup_spawner);
 
 	_level = 1;
@@ -241,22 +242,23 @@ static void _update(float dt)
 		collision_update();
 	}
 
-	hud_update(&_hud, _player.health, true);
+	hud_update(&_hud, _player.health, _player.ammo[0]);
 }
 
 static void _render(void)
 {
 	int i;
 
-	for (i = 0; i < ENEMY_POOL_SIZE; ++i) {
-		enemy_t *e = &_enemies[i];
-		renderer_render(&e->images[e->active_image]);
-	}
+	for (i = 0; i < ENEMY_POOL_SIZE; ++i)
+		enemy_render(&_enemies[i]);
 
 	renderer_render(&_player.ro);
 
-	for (i = 0; i < BULLETS_POOL_SIZE; ++i) renderer_render(&_bullets[i].ro);
-	for (i = 0; i < POWERUP_POOL_SIZE; ++i) renderer_render(&_powerups[i].ro);
+	for (i = 0; i < BULLETS_POOL_SIZE; ++i)
+		renderer_render(&_bullets[i].ro);
+	for (i = 0; i < POWERUP_POOL_SIZE; ++i)
+		renderer_render(&_powerups[i].ro);
+
 	hud_render(&_hud);
 }
 

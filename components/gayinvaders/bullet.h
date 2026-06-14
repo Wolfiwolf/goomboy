@@ -23,9 +23,6 @@ typedef struct {
 	int speed;
 	bool has_hit;
 	int collision_radius;
-
-	/* Flag so players bullets don't damage him */
-	bool damage_player;
 } bullet_t;
 
 void bullet_init(bullet_t *b);
@@ -33,13 +30,14 @@ void bullet_init(bullet_t *b);
 void bullet_destroy(bullet_t *b);
 
 void bullet_activate(bullet_t *b, bullet_type_t type,
-		     int x, int y, int targetx, int targety,
-		     bool damage_player);
+		     int x, int y, int targetx, int targety);
 
 void bullet_diactivate(bullet_t *b);
 
 void bullet_update(bullet_t *b, float dt);
 
 void bullet_hit(bullet_t *b);
+
+bool bullet_is_players(bullet_type_t btype);
 
 #endif

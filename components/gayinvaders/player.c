@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <string.h>
 #include "player.h"
 #include "bullet.h"
@@ -12,25 +13,33 @@ void player_init(player_t *p, int x, int y)
 	const asset_info_t *ass_inf;
 
 	/* Player init */
-	ass_inf = wd_get_asset_info(ASSET_TYPE_PLAYER);
 
 	memset(p, 0, sizeof(player_t));
+
+	p->go.type = GAME_OBJECT_TYPE_PLAYER;
+
+	// Rendering
+	ass_inf = wd_get_asset_info(ASSET_TYPE_PLAYER);
 	p->ro.buff = gayinvaders_malloc(ass_inf->h*ass_inf->w*2);
+	wd_read_asset(ASSET_TYPE_PLAYER, p->ro.buff, 0, 0, ass_inf->w, ass_inf->h);
 	p->ro.parent = &p->go;
 	p->ro.w = ass_inf->w;
 	p->ro.h = ass_inf->h;
-	p->go.type = GAME_OBJECT_TYPE_PLAYER;
+
+	// Position
 	p->go.x = x;
 	p->go.y = y;
 	p->go.vx = 0;
 	p->go.vy = 0.0;
 	p->go.ax = 0.0;
 	p->go.ay = 0.0;
+
+	// Player specific
 	p->health = 5;
 	p->collision_radius = p->ro.w / 2;
 	p->go.active = true;
 
-	wd_read_asset(ASSET_TYPE_PLAYER, p->ro.buff, 0, 0, ass_inf->w, ass_inf->h);
+	printf("Player collision: %d\n", p->collision_radius);
 }
 
 void player_destroy(player_t *p)
@@ -72,8 +81,7 @@ void player_fire(player_t *p, bullet_type_t bullet_type,
 		return;
 
 	// Is it a player bullet
-	if (bullet_type < BULLET_TYPE_NORMAL ||
-	    bullet_type >= BULLET_PLAYER_SPECIAL_CNT+1)
+	if (!bullet_is_players(bullet_type))
 		return;
 
 	for (i = 0; i < bullets_cnt; ++i) {
@@ -83,9 +91,10 @@ void player_fire(player_t *p, bullet_type_t bullet_type,
 			continue;
 
 		bullet_activate(b, bullet_type, p->go.x, p->go.y,
-				p->go.x, p->go.y-10, false);
+				p->go.x, p->go.y-10);
 
-		p->ammo[bullet_type-BULLET_PLAYER_SPECIAL_START] -= 1;
+		if (bullet_type != BULLET_TYPE_NORMAL)
+			p->ammo[bullet_type-BULLET_PLAYER_SPECIAL_START] -= 1;
 		break;
 	}
 }
