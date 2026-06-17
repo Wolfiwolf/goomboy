@@ -48,6 +48,8 @@ static int _enemy_formations[3][3] = {
 
 static bool _player_killed_triggered = false;
 
+static bool _is_boss_fight = false;
+
 static void _on_fire_normal_handler(void)
 {
 	player_fire(&_player, BULLET_TYPE_NORMAL, _bullets, BULLETS_POOL_SIZE);
@@ -80,28 +82,50 @@ static powerup_t *_get_new_powerup(void)
 	return NULL;
 }
 
+static void _start_boss_fight(void)
+{
+	_is_boss_fight = true;
+}
+
 static void _enemy_spawner(void *data)
 {
 	enemy_t *e = _get_new_enemy();
+	enemy_type_t maxtype;
+
+	if (_is_boss_fight)
+		return;
+
 	if (!e)
 		return;
 
-	enemy_activate(e, ENEMY_TYPE_EASY, -1, -e->images[0].h);
+	if (_level < 2)
+		maxtype = ENEMY_TYPE_EASY;
+	else if (_level < 3)
+		maxtype = ENEMY_TYPE_MOVING;
+	else if (_level < 50)
+		maxtype = ENEMY_TYPE_FAST;
+	else if (_level < 20)
+		maxtype = ENEMY_TYPE_TANK;
+	else 
+		maxtype = ENEMY_TYPE_BOSS;
+
+	if (maxtype != ENEMY_TYPE_BOSS) {
+		enemy_activate(e, rand() % (maxtype+1), -1, -e->images[0].h);
+		_level += 1;
+	} else {
+		_start_boss_fight();
+	}
 }
 
 static void _powerup_spawner(void *data)
 {
-	powerup_type_t pu_type;
 	powerup_t *pu;
 
 	pu = _get_new_powerup();
 	if (!pu)
 		return;
 
-	pu_type = rand() % POWERUP_TYPE_CNT;
-
-	// powerup_activate(pu, pu_type, SCREEN_W_HALF, -pu->ro.h);
-	powerup_activate(pu, POWERUP_TYPE_BOMB, SCREEN_W_HALF, -pu->ro.h);
+	powerup_activate(pu, rand() % POWERUP_TYPE_CNT, SCREEN_W_HALF, -pu->ro.h);
 }
 
 static void _end_game(void *data)
@@ -129,7 +153,7 @@ static void _player_killed(void)
 	_enemy_spawner_tim = NULL;
 	_powerup_spawner_tim = NULL;
 
-	timers_start(3000, false, NULL, _end_game);
+	timers_start(2000, false, NULL, _end_game);
 }
 
 static void _shoot_bomb(void *data)

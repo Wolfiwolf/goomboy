@@ -4,7 +4,6 @@
 #include "scene.h"
 #include "timers.h"
 #include "wd.h"
-#include <stdio.h>
 
 typedef struct {
 	game_object_t go;
@@ -45,6 +44,8 @@ static void _render_state(void)
 	renderer_flush();
 }
 
+static timer_handle_t *_next_tim = NULL;
+
 static void _next(void *data)
 {
 	_selected_btn = (_selected_btn+1) % BUTTONS_CNT;
@@ -52,8 +53,6 @@ static void _next(void *data)
 	if (_selected_btn == BUTTONS_CNT-1)
 		_new_scene = SCENE_TYPE_GAME;
 }
-
-static timer_handle_t *_next_tim = NULL;
 
 static void _init()
 {
@@ -95,7 +94,8 @@ static void _end(void)
 {
 	int i;
 
-	timers_stop(_next_tim);
+	if (_next_tim)
+		timers_stop(_next_tim);
 
 	for (i = 0; i < BUTTONS_CNT; ++i)
 		gayinvaders_free(_buttons[i].ro.buff);

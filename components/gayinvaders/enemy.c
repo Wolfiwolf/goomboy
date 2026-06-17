@@ -19,42 +19,67 @@ typedef struct {
 } enemy_config_t;
 
 static enemy_config_t _configs[ENEMY_TYPE_CNT] = {
-	{
+	{ // EASY
 		.health = 2,
-		.speedx = 50,
+		.speedx = 0,
 		.speedy = 15,
 		.turn_distance = 0,
 		.shoot_countdown = 2500,
 		.bullet_type = BULLET_TYPE_ENEMY_NORMAL,
+	},
+	{ // MOVING
+		.health = 2,
+		.speedx = 50,
+		.speedy = 15,
+		.turn_distance = 100,
+		.shoot_countdown = 2500,
+		.bullet_type = BULLET_TYPE_ENEMY_NORMAL,
+	},
+	{ // FAST
+		.health = 1,
+		.speedx = 0,
+		.speedy = 70,
+		.turn_distance = 0,
+		.shoot_countdown = 0,
+		.bullet_type = BULLET_TYPE_ENEMY_NORMAL,
+	},
+	{ // TANK
+		.health = ENEMY_MAX_HEALTH,
+		.speedx = 50,
+		.speedy = 15,
+		.turn_distance = 0,
+		.shoot_countdown = 0,
+		.bullet_type = BULLET_TYPE_ENEMY_NORMAL,
 	}
 };
 
-static uint16_t *_enemy_easy_images[ENEMY_TYPE_CNT][ENEMY_IMG_CNT] = {};
+static uint16_t *_enemy_images[ENEMY_TYPE_CNT][ENEMY_IMG_CNT] = {};
 
 static uint16_t *_health_block_image = NULL;
 
 static void _load_assets(enemy_type_t type)
 {
 	const asset_info_t *ass_inf;
+	int ass_start = (ASSET_TYPE_ENEMYEASYIDLE+type*ENEMY_IMG_CNT);
 	int i;
 
-
 	for (i = 0; i < ENEMY_IMG_CNT; ++i) {
-		if (_enemy_easy_images[type][i])
+		if (_enemy_images[type][i])
 			continue;;
 
-		ass_inf = wd_get_asset_info(ASSET_TYPE_ENEMYEASYIDLE+i);
-		_enemy_easy_images[type][i] = gayinvaders_malloc(ass_inf->w*ass_inf->h*2);
+		ass_inf = wd_get_asset_info(ass_start+i);
+		_enemy_images[type][i] = gayinvaders_malloc(ass_inf->w*ass_inf->h*2);
 
 		switch (type) {
 		case ENEMY_TYPE_EASY:
-			wd_read_asset(ASSET_TYPE_ENEMYEASYIDLE+i, _enemy_easy_images[type][i], 0, 0, ass_inf->w, ass_inf->h);
+		case ENEMY_TYPE_MOVING:
+		case ENEMY_TYPE_FAST:
+			wd_read_asset(ass_start+i, _enemy_images[type][i], 0, 0, ass_inf->w, ass_inf->h);
 			break;
-		case ENEMY_TYPE_MID:
-		case ENEMY_TYPE_HARD:
+		case ENEMY_TYPE_TANK:
 		case ENEMY_TYPE_BOSS:
 		default:
-			gayinvaders_free(_enemy_easy_images[type][i]);
+			gayinvaders_free(_enemy_images[type][i]);
 			break;
 		}
 	}
@@ -65,8 +90,8 @@ static void _unload_assets(enemy_type_t type)
 	int i;
 
 	for (i = 0; i < ENEMY_IMG_CNT; ++i) {
-		gayinvaders_free(_enemy_easy_images[type][i]);
-		_enemy_easy_images[type][i] = NULL;
+		gayinvaders_free(_enemy_images[type][i]);
+		_enemy_images[type][i] = NULL;
 	}
 }
 
@@ -108,9 +133,9 @@ void enemy_destroy(enemy_t *e)
 
 	for (i = 0; i < ENEMY_TYPE_CNT; ++i) {
 		for (j = 0; j < ENEMY_IMG_CNT; ++j) {
-			if (_enemy_easy_images[i][j]) {
-				gayinvaders_free(_enemy_easy_images[i][j]);
-				_enemy_easy_images[i][j] = NULL;
+			if (_enemy_images[i][j]) {
+				gayinvaders_free(_enemy_images[i][j]);
+				_enemy_images[i][j] = NULL;
 			}
 		}
 	}
@@ -128,7 +153,6 @@ void enemy_update(enemy_t *e, float dt,
 		  bullet_t *bullets, int bullets_cnt,
 		  game_object_t *player_go)
 {
-	int speedx = _configs[e->enemy_type].speedx;
 	int start_x;
 	int i;
 
@@ -139,6 +163,7 @@ void enemy_update(enemy_t *e, float dt,
 		goto basic_update;
 
 	if (e->turn_distance != 0) {
+		int speedx = _configs[e->enemy_type].speedx;
 		if (e->go.x - e->turn_center >= e->turn_distance)
 			e->go.vx = -speedx;
 		if (e->go.x - e->turn_center <= -e->turn_distance)
@@ -150,20 +175,22 @@ void enemy_update(enemy_t *e, float dt,
 	}
 
 
-	e->shoot_countdown -= dt*1000;
-	if (e->shoot_countdown <= 0) {
-		for (i = 0; i < bullets_cnt; ++i) {
-			bullet_t *b = &bullets[i];
+	if (e->shoot_countdown) {
+		e->shoot_countdown -= dt*1000;
+		if (e->shoot_countdown <= 0) {
+			for (i = 0; i < bullets_cnt; ++i) {
+				bullet_t *b = &bullets[i];
 
-			if (b->go.active)
-				continue;
+				if (b->go.active)
+					continue;
 
-			bullet_activate(b, _configs[e->enemy_type].bullet_type, e->go.x, e->go.y, player_go->x, player_go->y);
-			break;
+				bullet_activate(b, _configs[e->enemy_type].bullet_type, e->go.x, e->go.y, player_go->x, player_go->y);
+				break;
+			}
+			e->shoot_countdown = _configs[e->enemy_type].shoot_countdown;
+			e->active_image = ENEMY_IMG_SHOOT;
+			timers_start(500, false, e, _change_img_to_idle);
 		}
-		e->shoot_countdown = _configs[e->enemy_type].shoot_countdown;
-		e->active_image = ENEMY_IMG_SHOOT;
-		timers_start(500, false, e, _change_img_to_idle);
 	}
 
 basic_update:
@@ -204,22 +231,22 @@ void enemy_activate(enemy_t *e, enemy_type_t type, int x, int y)
 	const asset_info_t *ass_inf;
 	int i;
 
-	ass_inf = wd_get_asset_info(ASSET_TYPE_ENEMYEASYIDLE);
+	ass_inf = wd_get_asset_info(ASSET_TYPE_ENEMYEASYIDLE+type*ENEMY_IMG_CNT);
 
 	_load_assets(type);
 
 	// Position
 	
 	if (x == ENEMY_X_POS_RANDOM) {
-		x = rand() % (SCREEN_W - (tdist*2));
-		x += tdist;
+		x = rand() % (SCREEN_W - (tdist*2) - (ass_inf->w));
+		x += tdist + (ass_inf->w/2);
 	}
 
 	e->go.y = y;
 	e->go.vy = _configs[type].speedy;
 
-	if (e->turn_distance) {
-		e->go.x = x + ((rand() % (_configs[type].turn_distance*2))-_configs[type].turn_distance);
+	if (tdist) {
+		e->go.x = x + ((rand() % (tdist*2)) - tdist);
 		e->go.vx = _configs[type].speedx;
 	} else {
 		e->go.x = x;
@@ -228,7 +255,7 @@ void enemy_activate(enemy_t *e, enemy_type_t type, int x, int y)
 
 	// Enemy specific
 	e->enemy_type = type;
-	e->turn_distance = _configs[type].turn_distance;
+	e->turn_distance = tdist;
 	e->turn_center = x;
 	e->shoot_countdown = _configs[type].shoot_countdown;
 	e->health = _configs[type].health;
@@ -238,7 +265,7 @@ void enemy_activate(enemy_t *e, enemy_type_t type, int x, int y)
 	for (i = 0; i < ENEMY_IMG_CNT; ++i) {
 		e->images[i].w = ass_inf->w;
 		e->images[i].h = ass_inf->h;
-		e->images[i].buff = _enemy_easy_images[e->enemy_type][i];
+		e->images[i].buff = _enemy_images[e->enemy_type][i];
 		e->collision_radius = ass_inf->w/2;
 	}
 
@@ -251,6 +278,7 @@ void enemy_activate(enemy_t *e, enemy_type_t type, int x, int y)
 	}
 
 	e->go.active = true;
+	printf("Turn distance: %d, speedx: %.3f\n", e->turn_distance, e->go.vx);
 }
 
 void enemy_diactivate(enemy_t *e)

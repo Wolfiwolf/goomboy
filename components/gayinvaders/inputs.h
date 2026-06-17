@@ -7,6 +7,8 @@ typedef enum {
 } input_state_t;
 
 typedef enum {
+	INPUT_UP,
+	INPUT_DOWN,
 	INPUT_LEFT,
 	INPUT_RIGHT,
 	INPUT_FIRE_NORMAL,

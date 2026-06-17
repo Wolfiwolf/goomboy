@@ -70,6 +70,13 @@ void gayinvaders_render(const uint16_t ***screen_buff)
 	}
 }
 
+void gayinvaders_render_direct(const uint16_t *screen_buff,
+			       int xoff, int yoff,
+			       int w, int h)
+{
+	lcd_draw(xoff, yoff, w, h, screen_buff);
+}
+
 size_t gayinvaders_get_ms(void)
 {
 	return pdTICKS_TO_MS(xTaskGetTickCount());
@@ -86,8 +93,36 @@ static size_t _prev_shoot_t;
 
 input_state_t gayinvaders_get_input(input_t input)
 {
-	size_t t = pdTICKS_TO_MS(xTaskGetTickCount());
+	uint16_t btn_bitmap;
+	bool is_on = false;
+	int ret;
 
+	/*
+	ret = gpio_read(&btn_bitmap);
+	if (ret) {
+		ESP_LOGE("", "GPIO read fail");
+		return INPUT_STATE_OFF;
+	}
+
+	switch (input) {
+	case INPUT_UP:
+		is_on = !!(btn_bitmap & (1<<GPIO_BTN_UP));
+		break;
+	case INPUT_DOWN:
+		is_on = !!(btn_bitmap & (1<<GPIO_BTN_DOWN));
+		break;
+	case INPUT_FIRE_NORMAL:
+		is_on = !!(btn_bitmap & (1<<GPIO_BTN_Y));
+		break;
+	}
+
+	return is_on ? INPUT_STATE_ON : INPUT_STATE_ON;
+	*/
+	
+
+	/* Simulation
+		*/
+	size_t t = pdTICKS_TO_MS(xTaskGetTickCount());
 	// Shooting
 	if (t - _prev_shoot_t > 550 && t - _prev_shoot_t < 650 ) {
 		if (input == INPUT_FIRE_NORMAL)
@@ -156,11 +191,13 @@ void app_main(void)
 	lcd_clear(32, 32);
 	lcd_clear(16, 16);
 
+	/*
 	ret = gpio_init();
 	if (ret) {
 		ESP_LOGE("", "GPIO init failed!");
 		stall();
 	}
+	*/
 
 	ret = sdcard_init();
 	if (ret) {

@@ -6,7 +6,7 @@
 #include "inputs.h"
 
 /* CONFIG */
-#define SCREEN_W 380
+#define SCREEN_W 340
 #define SCREEN_H 320
 
 #define SCREEN_W_HALF (SCREEN_W/2)

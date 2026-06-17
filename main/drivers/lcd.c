@@ -109,7 +109,7 @@ void lcd_clear(int CLEAR_SIZEX, int CLEAR_SIZEY)
 	uint16_t *buffer = heap_caps_malloc(CLEAR_SIZEX*CLEAR_SIZEY*2, MALLOC_CAP_8BIT | MALLOC_CAP_DMA);
 	int x, y;
 
-	memset(buffer, 0, CLEAR_SIZEX*CLEAR_SIZEY*2);
+	memset(buffer, 0xFF, CLEAR_SIZEX*CLEAR_SIZEY*2);
 
 	for (x = 0; x < LCD_W_SIZE; x +=CLEAR_SIZEX) {
 		for (y = 0; y < LCD_H_SIZE; y +=CLEAR_SIZEY) {
