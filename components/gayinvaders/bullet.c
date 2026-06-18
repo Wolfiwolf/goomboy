@@ -8,20 +8,24 @@
 
 typedef struct {
 	int speed;
+	int acceleration;
 	int damage;
 } bullet_type_conf_t;
 
 static bullet_type_conf_t _configs[BULLET_TYPE_CNT] = {
 	{ // NORMAL
 		.speed = 250,
+		.acceleration = 0,
 		.damage = 1,
 	},
 	{ // BOMB
-		.speed = 150,
+		.speed = 0,
+		.acceleration = 250,
 		.damage = 3,
 	},
 	{ // ENEMY NORMAL
 		.speed = 250,
+		.acceleration = 0,
 		.damage = 1,
 	}
 };
@@ -131,6 +135,9 @@ void bullet_activate(bullet_t *b, bullet_type_t type,
 
 	b->go.vx = dirx * b->speed;
 	b->go.vy = diry * b->speed;
+
+	b->go.ax = dirx * _configs[type].acceleration;
+	b->go.ay = diry * _configs[type].acceleration;
 
 	b->go.active = true;
 }
