@@ -53,48 +53,6 @@ static enemy_config_t _configs[ENEMY_TYPE_CNT] = {
 	}
 };
 
-static uint16_t *_enemy_images[ENEMY_TYPE_CNT][ENEMY_IMG_CNT] = {};
-
-static uint16_t *_health_block_image = NULL;
-
-static void _load_assets(enemy_type_t type)
-{
-	const asset_info_t *ass_inf;
-	int ass_start = (ASSET_TYPE_ENEMYEASYIDLE+type*ENEMY_IMG_CNT);
-	int i;
-
-	for (i = 0; i < ENEMY_IMG_CNT; ++i) {
-		if (_enemy_images[type][i])
-			continue;;
-
-		ass_inf = wd_get_asset_info(ass_start+i);
-		_enemy_images[type][i] = gayinvaders_malloc(ass_inf->w*ass_inf->h*2);
-
-		switch (type) {
-		case ENEMY_TYPE_EASY:
-		case ENEMY_TYPE_MOVING:
-		case ENEMY_TYPE_FAST:
-			wd_read_asset(ass_start+i, _enemy_images[type][i], 0, 0, ass_inf->w, ass_inf->h);
-			break;
-		case ENEMY_TYPE_TANK:
-		case ENEMY_TYPE_BOSS:
-		default:
-			gayinvaders_free(_enemy_images[type][i]);
-			break;
-		}
-	}
-}
-
-static void _unload_assets(enemy_type_t type)
-{
-	int i;
-
-	for (i = 0; i < ENEMY_IMG_CNT; ++i) {
-		gayinvaders_free(_enemy_images[type][i]);
-		_enemy_images[type][i] = NULL;
-	}
-}
-
 void enemy_init(enemy_t *e)
 {
 	const asset_info_t *ass_inf;
@@ -102,43 +60,17 @@ void enemy_init(enemy_t *e)
 
 	ass_inf = wd_get_asset_info(ASSET_TYPE_HEALTHBARBLOCK);
 
-	if (!_health_block_image) {
-		_health_block_image = gayinvaders_malloc(ass_inf->w*ass_inf->h*2);
-		wd_read_asset(ASSET_TYPE_HEALTHBARBLOCK, _health_block_image, 0, 0, ass_inf->w, ass_inf->h);
-	}
-
 	memset(e, 0, sizeof(enemy_t));
 	
 	e->go.type = GAME_OBJECT_TYPE_ENEMY;
 
 	for (i = 0; i < ENEMY_IMG_CNT; ++i)
 		e->images[i].parent = &e->go;
-
-	for (i = 0; i < ENEMY_MAX_HEALTH; ++i) {
-		e->health_blocks[i].ro.parent = &e->health_blocks[i].go;
-		e->health_blocks[i].ro.buff = _health_block_image;
-		e->health_blocks[i].ro.w = ass_inf->w;
-		e->health_blocks[i].ro.h = ass_inf->h;
-	}
 }
 
 void enemy_destroy(enemy_t *e)
 {
-	int i,j;
-
-	if (_health_block_image) {
-		gayinvaders_free(_health_block_image);
-		_health_block_image = NULL;
-	}
-
-	for (i = 0; i < ENEMY_TYPE_CNT; ++i) {
-		for (j = 0; j < ENEMY_IMG_CNT; ++j) {
-			if (_enemy_images[i][j]) {
-				gayinvaders_free(_enemy_images[i][j]);
-				_enemy_images[i][j] = NULL;
-			}
-		}
-	}
+	// Empty
 }
 
 static void _change_img_to_idle(void *data)
@@ -216,6 +148,9 @@ void enemy_render(enemy_t *e)
 {
 	int i;
 
+	if (!e->go.active)
+		return;
+
 	renderer_render(&e->images[e->active_image]);
 
 	for (i = 0; i < ENEMY_MAX_HEALTH; ++i) {
@@ -232,8 +167,6 @@ void enemy_activate(enemy_t *e, enemy_type_t type, int x, int y)
 	int i;
 
 	ass_inf = wd_get_asset_info(ASSET_TYPE_ENEMYEASYIDLE+type*ENEMY_IMG_CNT);
-
-	_load_assets(type);
 
 	// Position
 	
@@ -265,20 +198,25 @@ void enemy_activate(enemy_t *e, enemy_type_t type, int x, int y)
 	for (i = 0; i < ENEMY_IMG_CNT; ++i) {
 		e->images[i].w = ass_inf->w;
 		e->images[i].h = ass_inf->h;
-		e->images[i].buff = _enemy_images[e->enemy_type][i];
+		e->images[i].buff = wd_get_asset(ASSET_TYPE_ENEMYEASYIDLE+e->enemy_type*ENEMY_IMG_CNT+i);
 		e->collision_radius = ass_inf->w/2;
 	}
 
 	e->active_image = ENEMY_IMG_IDLE;
 
+	ass_inf = wd_get_asset_info(ASSET_TYPE_HEALTHBARBLOCK);
+
 	for (i = 0; i < ENEMY_MAX_HEALTH; ++i) {
 		e->health_blocks[i].go.x = e->go.x;
 		e->health_blocks[i].go.y = e->go.y;
 
+		e->health_blocks[i].ro.parent = &e->health_blocks[i].go;
+		e->health_blocks[i].ro.buff = wd_get_asset(ASSET_TYPE_HEALTHBARBLOCK);
+		e->health_blocks[i].ro.w = ass_inf->w;
+		e->health_blocks[i].ro.h = ass_inf->h;
 	}
 
 	e->go.active = true;
-	printf("Turn distance: %d, speedx: %.3f\n", e->turn_distance, e->go.vx);
 }
 
 void enemy_diactivate(enemy_t *e)
@@ -286,9 +224,13 @@ void enemy_diactivate(enemy_t *e)
 	int i;
 
 	e->go.active = false;
+	for (i = 0; i < ENEMY_IMG_CNT; ++i)
+		wd_not_using(ASSET_TYPE_ENEMYEASYIDLE+e->enemy_type*3+i);
 
-	for (i = 0; i < ENEMY_MAX_HEALTH; ++i)
+	for (i = 0; i < ENEMY_MAX_HEALTH; ++i) {
 		e->health_blocks[i].go.active = false;
+		wd_not_using(ASSET_TYPE_HEALTHBARBLOCK);
+	}
 }
 
 static void _kill_enemy(void *enemy)

@@ -42,12 +42,20 @@ typedef struct {
 	uint32_t offset;
 	uint32_t w;
 	uint32_t h;
+
+	int consumers;
 } asset_info_t;
 
 int wd_init(const char *wd_fpath);
 
 const asset_info_t *wd_get_asset_info(asset_type_t atype);
 
-int wd_read_asset(asset_type_t atype, uint16_t *buffer, int xoff, int yoff, int w, int h);
+int wd_read_asset_direct(asset_type_t atype, uint16_t *buffer,
+			 int xoff, int yoff,
+			 int w, int h);
+
+void wd_not_using(asset_type_t atype);
+
+const uint16_t *wd_get_asset(asset_type_t atype);
 
 #endif

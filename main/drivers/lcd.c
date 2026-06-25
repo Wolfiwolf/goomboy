@@ -104,16 +104,19 @@ int lcd_draw(int x, int y, int w, int h, const uint16_t *pixels)
 	return ESP_OK;
 }
 
-void lcd_clear(int CLEAR_SIZEX, int CLEAR_SIZEY)
+void lcd_clear(int sizex, int sizey, uint16_t color)
 {
-	uint16_t *buffer = heap_caps_malloc(CLEAR_SIZEX*CLEAR_SIZEY*2, MALLOC_CAP_8BIT | MALLOC_CAP_DMA);
+	uint16_t *buffer = heap_caps_malloc(sizex*sizey*2, MALLOC_CAP_8BIT | MALLOC_CAP_DMA);
 	int x, y;
+	int i;
 
-	memset(buffer, 0xFF, CLEAR_SIZEX*CLEAR_SIZEY*2);
 
-	for (x = 0; x < LCD_W_SIZE; x +=CLEAR_SIZEX) {
-		for (y = 0; y < LCD_H_SIZE; y +=CLEAR_SIZEY) {
-			lcd_draw(x, y, CLEAR_SIZEX, CLEAR_SIZEY, buffer);
+	for (i = 0; i < sizex*sizey; ++i)
+		buffer[i] = color;
+
+	for (x = 0; x < LCD_W_SIZE; x +=sizex) {
+		for (y = 0; y < LCD_H_SIZE; y +=sizey) {
+			lcd_draw(x, y, sizex, sizey, buffer);
 		}
 	}
 

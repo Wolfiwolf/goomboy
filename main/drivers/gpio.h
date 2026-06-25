@@ -4,15 +4,15 @@
 #include <stdint.h>
 
 #define GPIO_BTN_UP     0
-#define GPIO_BTN_DOWN   1
-#define GPIO_BTN_LEFT   2
-#define GPIO_BTN_RIGHT  3
-#define GPIO_BTN_X      4
-#define GPIO_BTN_Y      5
-#define GPIO_BTN_A      6
-#define GPIO_BTN_B      7
-#define GPIO_BTN_SELECT 8
-#define GPIO_BTN_START  9
+#define GPIO_BTN_LEFT   1
+#define GPIO_BTN_RIGHT  2
+#define GPIO_BTN_DOWN   3
+#define GPIO_BTN_START  4
+#define GPIO_BTN_SELECT 5
+#define GPIO_BTN_B      6
+#define GPIO_BTN_Y      7
+#define GPIO_BTN_A      8
+#define GPIO_BTN_X      9
 
 int gpio_init(void);
 

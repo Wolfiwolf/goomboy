@@ -64,11 +64,10 @@ static void _init()
 		ass_type = ASSET_TYPE_MAINMENUBTN0+i;
 		ass_inf = wd_get_asset_info(ass_type);
 
-		_buttons[i].ro.buff = gayinvaders_malloc(ass_inf->w*ass_inf->h*2);
+		_buttons[i].ro.buff = wd_get_asset(ass_type);
 		_buttons[i].ro.h = ass_inf->h;
 		_buttons[i].ro.w = ass_inf->w;
 		_buttons[i].ro.parent = &_buttons[i].go;
-		wd_read_asset(ass_type, _buttons[i].ro.buff, 0, 0, ass_inf->w, ass_inf->h);
 
 		_buttons[i].go.x = (float)SCREEN_W/2;
 		_buttons[i].go.y = ((float)SCREEN_H/4)*(i+1);
@@ -79,11 +78,10 @@ static void _init()
 	ass_type = ASSET_TYPE_MAINMENUSELECTOR;
 	ass_inf = wd_get_asset_info(ass_type);
 
-	_selector.ro.buff = gayinvaders_malloc(ass_inf->w*ass_inf->h*2);
+	_selector.ro.buff = wd_get_asset(ass_type);
 	_selector.ro.h = ass_inf->h;
 	_selector.ro.w = ass_inf->w;
 	_selector.ro.parent = &_selector.go;
-	wd_read_asset(ass_type, _selector.ro.buff, 0, 0, ass_inf->w, ass_inf->h);
 
 	_render_state();
 
@@ -98,9 +96,9 @@ static void _end(void)
 		timers_stop(_next_tim);
 
 	for (i = 0; i < BUTTONS_CNT; ++i)
-		gayinvaders_free(_buttons[i].ro.buff);
+		wd_not_using(ASSET_TYPE_MAINMENUBTN0+i);
 
-	gayinvaders_free(_selector.ro.buff);
+	wd_not_using(ASSET_TYPE_MAINMENUSELECTOR);
 }
 
 static int _change_scene(void)

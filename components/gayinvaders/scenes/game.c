@@ -57,7 +57,8 @@ static void _on_fire_normal_handler(void)
 
 static void _on_fire_bomb_handler(void)
 {
-	player_fire(&_player, BULLET_TYPE_BOMB, _bullets, BULLETS_POOL_SIZE);
+	if (_player.ammo[BULLET_TYPE_BOMB - BULLET_PLAYER_SPECIAL_START])
+		player_fire(&_player, BULLET_TYPE_BOMB, _bullets, BULLETS_POOL_SIZE);
 }
 
 static enemy_t *_get_new_enemy(void)
@@ -179,11 +180,12 @@ static void _on_collision(void *obj1, game_object_type_t type1, void *obj2, game
 		} else if (type2 == GAME_OBJECT_TYPE_POWERUP) {
 			powerup_t *pu = obj2;
 
-			if (pu->type == POWERUP_TYPE_HEALTH)
-				_player.health += 1;
-			else if (pu->type == POWERUP_TYPE_BOMB) {
+			if (pu->type == POWERUP_TYPE_HEALTH) {
+				if (_player.health != PLAYER_MAX_HEALTH)
+					_player.health += 1;
+			} else if (pu->type == POWERUP_TYPE_BOMB) {
 				_player.ammo[BULLET_TYPE_BOMB - BULLET_PLAYER_SPECIAL_START] += 1;
-				timers_start(1000, false, NULL, _shoot_bomb);
+				// timers_start(1000, false, NULL, _shoot_bomb);
 			}
 
 			powerup_diactivate(pu);
@@ -197,7 +199,7 @@ static void _init()
 
 	/* Set input handlers */
 	inputs_set_on_handler(INPUT_FIRE_NORMAL, _on_fire_normal_handler);
-	inputs_set_on_handler(INPUT_FIRE_BOMB, _on_fire_normal_handler);
+	inputs_set_on_handler(INPUT_FIRE_BOMB, _on_fire_bomb_handler);
 
 	player_init(&_player, SCREEN_W / 4, SCREEN_H-32);
 

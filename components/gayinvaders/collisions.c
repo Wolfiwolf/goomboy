@@ -57,12 +57,8 @@ void collision_update(void)
 		if (_player->go.active && !bullet_is_players(b->type)) {
 			float dist = _get_dist(&_player->go, &b->go);
 
-			if (dist < (float)_player->collision_radius) {
-				printf("BULLET HIT PLAYER %.3f < %d\n", dist, _player->collision_radius);
-				printf("BULLET: %d, (%.3f %.3f)\n", b->type, b->go.x, b->go.y);
-				printf("PLAYER:      (%.3f %.3f)\n", _player->go.x, _player->go.y);
+			if (dist < (float)_player->collision_radius)
 				_on_collision_handler(_player, _player->go.type, b, b->go.type);
-			}
 		}
 
 		if (!bullet_is_players(b->type))

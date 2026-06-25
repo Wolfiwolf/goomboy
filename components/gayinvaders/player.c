@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <string.h>
 #include "player.h"
 #include "bullet.h"
@@ -20,8 +19,8 @@ void player_init(player_t *p, int x, int y)
 
 	// Rendering
 	ass_inf = wd_get_asset_info(ASSET_TYPE_PLAYER);
-	p->ro.buff = gayinvaders_malloc(ass_inf->h*ass_inf->w*2);
-	wd_read_asset(ASSET_TYPE_PLAYER, p->ro.buff, 0, 0, ass_inf->w, ass_inf->h);
+	p->ro.buff = wd_get_asset(ASSET_TYPE_PLAYER);
+
 	p->ro.parent = &p->go;
 	p->ro.w = ass_inf->w;
 	p->ro.h = ass_inf->h;
@@ -42,7 +41,7 @@ void player_init(player_t *p, int x, int y)
 
 void player_destroy(player_t *p)
 {
-	gayinvaders_free(p->ro.buff);
+	wd_not_using(ASSET_TYPE_PLAYER);
 }
 
 void player_update(player_t *p, float dt)

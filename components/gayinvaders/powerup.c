@@ -1,5 +1,3 @@
-#include <math.h>
-#include <stdio.h>
 #include "powerup.h"
 #include "gayinvaders.h"
 #include "physics.h"
@@ -19,7 +17,7 @@ static powerup_type_conf_t _configs[POWERUP_TYPE_CNT] = {
 };
 
 static int _powerup_img_consumers[POWERUP_TYPE_CNT] = { };
-static uint16_t *_powerup_img[POWERUP_TYPE_CNT] = {};
+static const uint16_t *_powerup_img[POWERUP_TYPE_CNT] = {};
 
 void powerup_init(powerup_t *pu)
 {
@@ -35,7 +33,7 @@ void powerup_destroy(powerup_t *pu)
 		if (_powerup_img[i]) {
 			_powerup_img_consumers[i] -= 1;
 			if (_powerup_img_consumers[i] == 0) {
-				gayinvaders_free(_powerup_img[i]);
+				wd_not_using(ASSET_TYPE_POWERUPHEALTH + i);
 				_powerup_img[i] = NULL;
 			}
 		}
@@ -53,8 +51,7 @@ void powerup_activate(powerup_t *pu, powerup_type_t type,
 	ass_inf = wd_get_asset_info(ass_type);
 
 	if (!_powerup_img[type]) {
-		_powerup_img[type] = gayinvaders_malloc(ass_inf->w*ass_inf->h*2);
-		wd_read_asset(ass_type, _powerup_img[type], 0, 0, ass_inf->w, ass_inf->h);
+		_powerup_img[type] = wd_get_asset(ass_type);
 		_powerup_img_consumers[type] += 1;
 	}
 

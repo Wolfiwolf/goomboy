@@ -31,11 +31,9 @@ static bullet_type_conf_t _configs[BULLET_TYPE_CNT] = {
 };
 
 
-static uint16_t *_bullet_img[BULLET_TYPE_CNT] = {};
-static int _bullet_img_consumers[BULLET_TYPE_CNT] = { };
+// static const uint16_t *_bullet_img[BULLET_TYPE_CNT] = {};
 
-static uint16_t *_bullet_hit_img[BULLET_TYPE_CNT] = {};
-static int _bullet_hit_img_consumers[BULLET_TYPE_CNT] = { };
+// static const uint16_t *_bullet_hit_img[BULLET_TYPE_CNT] = {};
 
 void bullet_init(bullet_t *b)
 {
@@ -46,31 +44,7 @@ void bullet_init(bullet_t *b)
 
 void bullet_destroy(bullet_t *b)
 {
-	int i;
-
-	for (i = 0; i < BULLET_TYPE_CNT; ++i) {
-		if (_bullet_img[i]) {
-			_bullet_img_consumers[i] -= 1;
-			if (_bullet_img_consumers[i] == 0) {
-				if (_bullet_img[i]) {
-					printf("Freed bullet %d\n", i);
-					gayinvaders_free(_bullet_img[i]);
-					_bullet_img[i] = NULL;
-				}
-			}
-		}
-
-		if (_bullet_hit_img[i]) {
-			_bullet_hit_img_consumers[i] -= 1;
-			if (_bullet_hit_img_consumers[i] == 0) {
-				if (_bullet_hit_img[i]) {
-					printf("Freed bullet hit %d\n", i);
-					gayinvaders_free(_bullet_hit_img[i]);
-					_bullet_hit_img[i] = NULL;
-				}
-			}
-		}
-	}
+	// Empty
 }
 
 static void _get_dir(float ox, float oy, float tx, float ty,
@@ -99,20 +73,12 @@ void bullet_activate(bullet_t *b, bullet_type_t type,
 	// Load hit asset
 	ass_type = ASSET_TYPE_BULLETNORMALHIT+type;
 	ass_inf = wd_get_asset_info(ass_type);
-	if (!_bullet_hit_img[type]) {
-		_bullet_hit_img[type] = gayinvaders_malloc(ass_inf->w*ass_inf->h*2);
-		wd_read_asset(ass_type, _bullet_hit_img[type], 0, 0, ass_inf->w, ass_inf->h);
-		_bullet_hit_img_consumers[type] += 1;
-	}
+	// _bullet_hit_img[type] = wd_get_asset(ass_type);
 
 	// Load asset
 	ass_type = ASSET_TYPE_BULLETNORMAL+type;
 	ass_inf = wd_get_asset_info(ass_type);
-	if (!_bullet_img[type]) {
-		_bullet_img[type] = gayinvaders_malloc(ass_inf->w*ass_inf->h*2);
-		wd_read_asset(ass_type, _bullet_img[type], 0, 0, ass_inf->w, ass_inf->h);
-		_bullet_img_consumers[type] += 1;
-	}
+	// _bullet_img[type] = wd_get_asset(ass_type);
 
 	// Setup
 	_get_dir(x, y, targetx, targety, &dirx, &diry);
@@ -120,7 +86,8 @@ void bullet_activate(bullet_t *b, bullet_type_t type,
 	// Render
 	b->ro.w = ass_inf->w;
 	b->ro.h = ass_inf->h;
-	b->ro.buff = _bullet_img[type];
+	// b->ro.buff = _bullet_img[type];
+	b->ro.buff = wd_get_asset(ASSET_TYPE_BULLETNORMAL+type);
 
 	// Bullet specifics
 	b->type = type;
@@ -142,22 +109,28 @@ void bullet_activate(bullet_t *b, bullet_type_t type,
 	b->go.active = true;
 }
 
-void bullet_diactivate(bullet_t *b)
-{
-	b->go.active = false;
-}
-
 void bullet_update(bullet_t *b, float dt)
 {
-	if (!b->has_hit)
-		physics_update(&b->go, dt);
+	if (!b->go.active || b->has_hit)
+		return;
+
+	physics_update(&b->go, dt);
 
 	/* Disable bullet if out of screen */
 	if (b->go.y < 0 - b->ro.h)
-		b->go.active = false;
+		bullet_diactivate(b);
 
 	if (b->go.y >= SCREEN_H + b->ro.h)
 		bullet_diactivate(b);
+}
+
+void bullet_diactivate(bullet_t *b)
+{
+	wd_not_using(ASSET_TYPE_BULLETNORMAL+b->type);
+	wd_not_using(ASSET_TYPE_BULLETNORMALHIT+b->type);
+	// _bullet_img[b->type] = NULL;
+	// _bullet_hit_img[b->type] = NULL;
+	b->go.active = false;
 }
 
 static void _diactivate(void *data)
@@ -171,11 +144,16 @@ void bullet_hit(bullet_t *b)
 {
 	const asset_info_t *ass_inf = wd_get_asset_info(ASSET_TYPE_BULLETNORMALHIT+b->type);
 
+	if (b->has_hit)
+		return;
+
 	b->has_hit = true;
 
 	b->ro.w = ass_inf->w;
 	b->ro.h = ass_inf->h;
-	b->ro.buff = _bullet_hit_img[b->type];
+	// b->ro.buff = _bullet_hit_img[b->type];
+	b->ro.buff = wd_get_asset(ASSET_TYPE_BULLETNORMALHIT+b->type);
+	// TODO: Double not using fix
 
 	timers_start(1000, false, b, _diactivate);
 }

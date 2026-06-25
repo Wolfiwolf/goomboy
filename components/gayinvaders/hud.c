@@ -2,8 +2,8 @@
 #include "gayinvaders.h"
 #include "wd.h"
 
-static uint16_t *_hb_block_image = NULL;
-static uint16_t *_hb_ammo_images[BULLET_PLAYER_SPECIAL_CNT] = {};
+static const uint16_t *_hb_block_image = NULL;
+static const uint16_t *_hb_ammo_images[BULLET_PLAYER_SPECIAL_CNT] = {};
 
 #define HEALTHBAR_START 100
 #define AMMO_START      (SCREEN_W-100)
@@ -15,11 +15,8 @@ void hud_init(hud_t *hb, int x, int y)
 
 	ass_inf = wd_get_asset_info(ASSET_TYPE_HEALTHBARBLOCK);
 
-	if (!_hb_block_image) {
-		_hb_block_image = gayinvaders_malloc(ass_inf->w * ass_inf->h * 2);
-		wd_read_asset(ASSET_TYPE_HEALTHBARBLOCK, _hb_block_image,
-			      0, 0, ass_inf->w, ass_inf->h);
-	}
+	if (!_hb_block_image)
+		_hb_block_image = wd_get_asset(ASSET_TYPE_HEALTHBARBLOCK);
 	
 	for (i = 0; i < HUD_HEALTHBAR_BLOCKS; ++i) {
 		hb->blocks[i].ro.parent = &hb->blocks[i].go;
@@ -39,10 +36,8 @@ void hud_init(hud_t *hb, int x, int y)
 
 		ass_inf = wd_get_asset_info(ass_type);
 
-		if (!_hb_ammo_images[i]) {
-			_hb_ammo_images[i] = gayinvaders_malloc(ass_inf->h*ass_inf->w*2);
-			wd_read_asset(ass_type, _hb_ammo_images[i], 0, 0, ass_inf->w, ass_inf->h);
-		}
+		if (!_hb_ammo_images[i])
+			_hb_ammo_images[i] = wd_get_asset(ass_type);
 
 		hb->ammos[i].ro.parent = &hb->ammos[i].go;
 		hb->ammos[i].ro.buff = _hb_ammo_images[i];

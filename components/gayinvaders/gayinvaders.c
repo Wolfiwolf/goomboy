@@ -77,7 +77,7 @@ void gayinvaders_main(int argc, char *argv[])
 		fps_cnt += 1;
 		if (gayinvaders_get_ms() - _prev_mem_display_t > FREE_MEM_DISPLAY_INTERVAL) {
 
-			printf("FPS: %.3f, Free mem: %lu\n", (float)FREE_MEM_DISPLAY_INTERVAL/(float)fps_cnt, gayinvaders_free_mem());
+			// printf("FPS: %.3f, Free mem: %lu\n", (float)FREE_MEM_DISPLAY_INTERVAL/(float)fps_cnt, gayinvaders_free_mem());
 			_prev_mem_display_t = gayinvaders_get_ms();
 			fps_cnt = 0;
 		}

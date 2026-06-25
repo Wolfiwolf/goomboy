@@ -11,6 +11,6 @@ int lcd_init(void (*buffer_transfered_callback)(void));
 // pixels: RGB565 buffer, width * height * 2 bytes
 int lcd_draw(int x, int y, int w, int h, const uint16_t *pixels);
 
-void lcd_clear(int sizex, int sizey);
+void lcd_clear(int sizex, int sizey, uint16_t color);
 
 #endif

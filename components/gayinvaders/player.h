@@ -5,6 +5,8 @@
 #include "gameobject.h"
 #include "renderer.h"
 
+#define PLAYER_MAX_HEALTH 5
+
 typedef struct {
 	game_object_t go;
 	render_obj_t ro;

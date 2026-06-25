@@ -14,6 +14,7 @@
 #include "system.h"
 #include "utils/queue.h"
 #include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
 #include <string.h>
@@ -95,9 +96,9 @@ input_state_t gayinvaders_get_input(input_t input)
 {
 	uint16_t btn_bitmap;
 	bool is_on = false;
+	int btn_shift;
 	int ret;
 
-	/*
 	ret = gpio_read(&btn_bitmap);
 	if (ret) {
 		ESP_LOGE("", "GPIO read fail");
@@ -105,23 +106,26 @@ input_state_t gayinvaders_get_input(input_t input)
 	}
 
 	switch (input) {
-	case INPUT_UP:
-		is_on = !!(btn_bitmap & (1<<GPIO_BTN_UP));
+	case INPUT_LEFT:
+		btn_shift = GPIO_BTN_LEFT;
 		break;
-	case INPUT_DOWN:
-		is_on = !!(btn_bitmap & (1<<GPIO_BTN_DOWN));
+	case INPUT_RIGHT:
+		btn_shift = GPIO_BTN_RIGHT;
 		break;
 	case INPUT_FIRE_NORMAL:
-		is_on = !!(btn_bitmap & (1<<GPIO_BTN_Y));
+		btn_shift = GPIO_BTN_Y;
+		break;
+	case INPUT_FIRE_BOMB:
+		btn_shift = GPIO_BTN_B;
 		break;
 	}
 
-	return is_on ? INPUT_STATE_ON : INPUT_STATE_ON;
-	*/
+	is_on = !(btn_bitmap & (1<<btn_shift));
+
+	return is_on ? INPUT_STATE_ON : INPUT_STATE_OFF;
 	
 
 	/* Simulation
-		*/
 	size_t t = pdTICKS_TO_MS(xTaskGetTickCount());
 	// Shooting
 	if (t - _prev_shoot_t > 550 && t - _prev_shoot_t < 650 ) {
@@ -145,6 +149,7 @@ input_state_t gayinvaders_get_input(input_t input)
 		return INPUT_STATE_ON;
 
 	return INPUT_STATE_OFF;
+		*/
 }
 
 void *gayinvaders_malloc(size_t sz)
@@ -172,6 +177,16 @@ size_t gayinvaders_free_mem(void)
 	return sys_get_free_mem();
 }
 
+static void turn_green(void)
+{
+
+}
+
+static void turn_red(void)
+{
+
+}
+
 void app_main(void)
 {
 	const char *argv[3] = {
@@ -188,16 +203,14 @@ void app_main(void)
 		stall();
 	}
 
-	lcd_clear(32, 32);
-	lcd_clear(16, 16);
+	lcd_clear(32, 32, 0xFFFF);
 
-	/*
 	ret = gpio_init();
 	if (ret) {
-		ESP_LOGE("", "GPIO init failed!");
+		uint16_t color = 0b11111; // RED
+		lcd_clear(16, 16, (color >> 8) | ((color & 0xFF) << 8));
 		stall();
 	}
-	*/
 
 	ret = sdcard_init();
 	if (ret) {

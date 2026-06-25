@@ -7,7 +7,7 @@
 
 typedef struct {
 	game_object_t *parent;
-	uint16_t *buff;
+	const uint16_t *buff;
 	int w, h;
 } render_obj_t;
 

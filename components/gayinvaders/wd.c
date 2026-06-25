@@ -6,9 +6,11 @@
 
 #define TABLE_START 4
 
+static const char *_wd_filepath;
 static size_t _wd_file_size;
 static size_t _data_start;
-static asset_info_t _asset_table[ASSET_TYPE_COUNT];
+
+static asset_info_t _asset_table[ASSET_TYPE_COUNT] = {};
 
 static const char *_asset_names[ASSET_TYPE_COUNT] = {
 	"INTRO",
@@ -40,7 +42,7 @@ static const char *_asset_names[ASSET_TYPE_COUNT] = {
 	"POWERUPBOMB",
 };
 
-static const char *_wd_filepath;
+static uint16_t *_assets_data[ASSET_TYPE_COUNT] = {};
 
 static asset_type_t _name_to_asset_type(char *name)
 {
@@ -127,7 +129,7 @@ const asset_info_t *wd_get_asset_info(asset_type_t atype)
 	return &_asset_table[atype];
 }
 
-int wd_read_asset(asset_type_t atype, uint16_t *buffer, int xoff, int yoff, int w, int h)
+int wd_read_asset_direct(asset_type_t atype, uint16_t *buffer, int xoff, int yoff, int w, int h)
 {
 	asset_info_t *ass = &_asset_table[atype];
 	uint8_t *buff;
@@ -168,4 +170,36 @@ int wd_read_asset(asset_type_t atype, uint16_t *buffer, int xoff, int yoff, int 
 	gayinvaders_free(buff);
 
 	return 0;
+}
+
+void wd_not_using(asset_type_t atype)
+{
+	if (_asset_table[atype].consumers == 0) {
+		printf("Asset type %d is already not used\n", atype);
+		return;
+	}
+
+	_asset_table[atype].consumers -= 1;
+
+	if (_asset_table[atype].consumers == 0) {
+		printf("WD: Free %s\n", _asset_names[atype]);
+		gayinvaders_free(_assets_data[atype]);
+		_assets_data[atype] = NULL;
+	}
+}
+
+const uint16_t *wd_get_asset(asset_type_t atype)
+{
+	asset_info_t *ass_info = &_asset_table[atype];
+	printf("WD: Num %s: %d\n", _asset_names[atype], _asset_table[atype].consumers);
+
+	if (_asset_table[atype].consumers == 0) {
+		printf("WD: Alloc %s\n", _asset_names[atype]);
+		_assets_data[atype] = gayinvaders_malloc(ass_info->h*ass_info->w*2);
+		wd_read_asset_direct(atype, _assets_data[atype], 0, 0, ass_info->w, ass_info->h);
+	}
+
+	_asset_table[atype].consumers += 1;
+
+	return _assets_data[atype];
 }
