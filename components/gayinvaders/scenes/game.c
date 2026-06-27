@@ -38,6 +38,7 @@ static enemy_t _enemies[ENEMY_POOL_SIZE] = {};
 static timer_handle_t *_enemy_spawner_tim = NULL;
 static timer_handle_t *_powerup_spawner_tim = NULL;
 
+#define ENEMY_SPAWN_INTERVAL 6000
 static int _level = 1;
 
 static bool _player_killed_triggered = false;
@@ -104,12 +105,14 @@ static void _enemy_spawner(void *data)
 	else 
 		maxtype = ENEMY_TYPE_BOSS;
 
-	if (maxtype != ENEMY_TYPE_BOSS) {
-		enemy_activate(e, rand() % (maxtype+1), -1, -e->images[0].h);
-		_level += 1;
-	} else {
+	if (maxtype == ENEMY_TYPE_BOSS) {
 		_start_boss_fight();
+		return;
 	}
+
+	enemy_activate(e, rand() % (maxtype+1), -1, -e->images[0].h);
+	_level += 1;
+	timers_change_dur(_enemy_spawner_tim, ENEMY_SPAWN_INTERVAL - (_level * 100));
 }
 
 static void _powerup_spawner(void *data)
@@ -120,7 +123,10 @@ static void _powerup_spawner(void *data)
 	if (!pu)
 		return;
 
-	powerup_activate(pu, rand() % POWERUP_TYPE_CNT, SCREEN_W_HALF, -pu->ro.h);
+	//powerup_activate(pu, rand() % POWERUP_TYPE_CNT, SCREEN_W_HALF, -pu->ro.h);
+	powerup_activate(pu, rand() % POWERUP_TYPE_SHIELD,
+			(rand() % (SCREEN_W - pu->ro.w))+(pu->ro.w/2),
+			 -pu->ro.h);
 }
 
 static void _end_game(void *data)
@@ -180,6 +186,8 @@ static void _on_collision(void *obj1, game_object_type_t type1, void *obj2, game
 			} else if (pu->type == POWERUP_TYPE_BOMB) {
 				_player.ammo[BULLET_TYPE_BOMB - BULLET_PLAYER_SPECIAL_START] += 1;
 				timers_start(1000, false, NULL, _shoot_bomb);
+			} else if (pu->type == POWERUP_TYPE_SHIELD) {
+				player_shield_up(&_player);
 			}
 
 			powerup_diactivate(pu);
@@ -272,7 +280,7 @@ static void _render(void)
 	for (i = 0; i < ENEMY_POOL_SIZE; ++i)
 		enemy_render(&_enemies[i]);
 
-	renderer_render(&_player.ro);
+	player_render(&_player);
 
 	for (i = 0; i < BULLETS_POOL_SIZE; ++i)
 		renderer_render(&_bullets[i].ro);

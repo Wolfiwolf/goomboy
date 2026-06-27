@@ -4,6 +4,7 @@
 #include "bullet.h"
 #include "gameobject.h"
 #include "renderer.h"
+#include "timers.h"
 
 #define PLAYER_MAX_HEALTH 5
 
@@ -17,6 +18,12 @@ typedef struct {
 	int collision_radius;
 
 	bool ammo[BULLET_PLAYER_SPECIAL_CNT];
+
+	size_t prev_shot_t;
+
+	bool shield_up;
+
+	timer_handle_t *shield_timer;
 } player_t;
 
 void player_init(player_t *p, int x, int y);
@@ -24,6 +31,8 @@ void player_init(player_t *p, int x, int y);
 void player_destroy(player_t *p);
 
 void player_update(player_t *p, float dt);
+
+void player_render(player_t *p);
 
 void player_go_stop(player_t *p);
 
@@ -33,5 +42,7 @@ void player_go_right(player_t *p);
 
 void player_fire(player_t *p, bullet_type_t bullet_type,
 		 bullet_t *bullets, int bullets_cnt);
+
+void player_shield_up(player_t *p);
 
 #endif

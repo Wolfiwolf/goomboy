@@ -7,6 +7,7 @@
 typedef enum {
 	POWERUP_TYPE_HEALTH = 0,
 	POWERUP_TYPE_BOMB,
+	POWERUP_TYPE_SHIELD,
 	POWERUP_TYPE_CNT,
 } powerup_type_t;
 

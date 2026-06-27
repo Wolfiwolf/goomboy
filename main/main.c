@@ -95,6 +95,7 @@ static size_t _prev_shoot_t;
 input_state_t gayinvaders_get_input(input_t input)
 {
 	/*
+	*/
 	uint16_t btn_bitmap;
 	bool is_on = false;
 	int btn_shift;
@@ -130,10 +131,8 @@ input_state_t gayinvaders_get_input(input_t input)
 	is_on = !(btn_bitmap & (1<<btn_shift));
 
 	return is_on ? INPUT_STATE_ON : INPUT_STATE_OFF;
-	*/
 
 	/* Simulation
- */
 	size_t t = pdTICKS_TO_MS(xTaskGetTickCount());
 	// Shooting
 	if (t - _prev_shoot_t > 550 && t - _prev_shoot_t < 650 ) {
@@ -157,6 +156,7 @@ input_state_t gayinvaders_get_input(input_t input)
 		return INPUT_STATE_ON;
 
 	return INPUT_STATE_OFF;
+ */
 }
 
 void *gayinvaders_malloc(size_t sz)

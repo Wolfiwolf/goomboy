@@ -14,6 +14,7 @@ static asset_info_t _asset_table[ASSET_TYPE_COUNT] = {};
 
 static const char *_asset_names[ASSET_TYPE_COUNT] = {
 	"INTRO",
+	"DEAD",
 	"LEFTSIDE",
 	"RIGHTSIDE",
 	"MAINMENUSELECTOR",
@@ -43,6 +44,8 @@ static const char *_asset_names[ASSET_TYPE_COUNT] = {
 	"AMMO0",
 	"POWERUPHEALTH",
 	"POWERUPBOMB",
+	"POWERUPSHIELD",
+	"SHIELD",
 };
 
 static uint16_t *_assets_data[ASSET_TYPE_COUNT] = {};

@@ -5,14 +5,21 @@
 
 typedef struct {
 	int speed;
+	asset_type_t image;
 } powerup_type_conf_t;
 
 static powerup_type_conf_t _configs[POWERUP_TYPE_CNT] = {
 	{ // HEALTH
 		.speed = 50,
+		.image = ASSET_TYPE_POWERUPHEALTH
 	},
 	{ // BOMB
 		.speed = 50,
+		.image = ASSET_TYPE_POWERUPBOMB
+	},
+	{ // SHIELD
+		.speed = 50,
+		.image = ASSET_TYPE_POWERUPSHIELD
 	},
 };
 
@@ -33,7 +40,7 @@ void powerup_activate(powerup_t *pu, powerup_type_t type,
 	const asset_info_t *ass_inf;
 	asset_type_t ass_type;
 
-	ass_type = ASSET_TYPE_POWERUPHEALTH + type;
+	ass_type = _configs[type].image;
 
 	ass_inf = wd_get_asset_info(ass_type);
 
@@ -58,7 +65,7 @@ void powerup_diactivate(powerup_t *pu)
 	if (!pu->go.active)
 		return;
 
-	wd_not_using(ASSET_TYPE_POWERUPHEALTH + pu->type);
+	wd_not_using(_configs[pu->type].image);
 	pu->go.active = false;
 }
 

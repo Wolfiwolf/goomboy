@@ -11,4 +11,6 @@ timer_handle_t *timers_start(int duration, bool loop, void *data, void (*on_fini
 
 void timers_stop(timer_handle_t *tim_handle);
 
+void timers_change_dur(timer_handle_t *tim_handle, int duration);
+
 #endif

@@ -3,9 +3,12 @@
 #include "bullet.h"
 #include "gayinvaders.h"
 #include "physics.h"
+#include "timers.h"
 #include "wd.h"
 
 #define SPEEDX 50
+
+#define NORMAL_SHOOT_INTERVAL 500
 
 void player_init(player_t *p, int x, int y)
 {
@@ -36,6 +39,11 @@ void player_init(player_t *p, int x, int y)
 	// Player specific
 	p->health = 5;
 	p->collision_radius = p->ro.w / 2;
+
+	p->prev_shot_t = gayinvaders_get_ms();
+
+	p->shield_up = false;
+
 	p->go.active = true;
 }
 
@@ -58,6 +66,14 @@ void player_update(player_t *p, float dt)
 	else if (p->go.x + ((float)p->ro.w/2) >= SCREEN_W)
 		p->go.x = SCREEN_W - ((float)p->ro.w/2);
 }
+void player_render(player_t *p)
+{
+	renderer_render(&p->ro);
+
+	if (p->shield_up) {
+		
+	}
+}
 
 void player_go_stop(player_t *p)
 {
@@ -77,10 +93,17 @@ void player_go_right(player_t *p)
 void player_fire(player_t *p, bullet_type_t bullet_type,
 		 bullet_t *bullets, int bullets_cnt)
 {
+	size_t current_t;
 	int i;
 
 	if (p->dead)
 		return;
+
+	current_t = gayinvaders_get_ms();
+
+	if (current_t - p->prev_shot_t < NORMAL_SHOOT_INTERVAL)
+		return;
+	p->prev_shot_t = current_t;
 
 	// Is it a player bullet
 	if (!bullet_is_players(bullet_type))
@@ -99,4 +122,21 @@ void player_fire(player_t *p, bullet_type_t bullet_type,
 			p->ammo[bullet_type-BULLET_PLAYER_SPECIAL_START] -= 1;
 		break;
 	}
+}
+
+static void _shield_timeout(void *data)
+{
+	player_t *p = data;
+
+	p->shield_up = false;
+}
+
+void player_shield_up(player_t *p)
+{
+	if (p->shield_up)
+		timers_stop(p->shield_timer);
+
+	p->shield_timer = timers_start(6000, false, p, _shield_timeout);
+
+	p->shield_up = true;
 }
