@@ -185,7 +185,7 @@ static void _on_collision(void *obj1, game_object_type_t type1, void *obj2, game
 					_player.health += 1;
 			} else if (pu->type == POWERUP_TYPE_BOMB) {
 				_player.ammo[BULLET_TYPE_BOMB - BULLET_PLAYER_SPECIAL_START] += 1;
-				// timers_start(1000, false, NULL, _shoot_bomb);
+				timers_start(1000, false, NULL, _shoot_bomb);
 			}
 
 			powerup_diactivate(pu);

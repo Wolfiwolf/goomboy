@@ -142,9 +142,7 @@ int wd_read_asset_direct(asset_type_t atype, uint16_t *buffer, int xoff, int yof
 		return -EIO;
 	}
 
-
 	buff = gayinvaders_malloc(w*3);
-
 
 	for (y = 0; y < h; ++y) {
 		int src_row = yoff + y;
@@ -174,15 +172,12 @@ int wd_read_asset_direct(asset_type_t atype, uint16_t *buffer, int xoff, int yof
 
 void wd_not_using(asset_type_t atype)
 {
-	if (_asset_table[atype].consumers == 0) {
-		printf("Asset type %d is already not used\n", atype);
+	if (_asset_table[atype].consumers == 0)
 		return;
-	}
 
 	_asset_table[atype].consumers -= 1;
 
 	if (_asset_table[atype].consumers == 0) {
-		printf("WD: Free %s\n", _asset_names[atype]);
 		gayinvaders_free(_assets_data[atype]);
 		_assets_data[atype] = NULL;
 	}
@@ -191,10 +186,8 @@ void wd_not_using(asset_type_t atype)
 const uint16_t *wd_get_asset(asset_type_t atype)
 {
 	asset_info_t *ass_info = &_asset_table[atype];
-	printf("WD: Num %s: %d\n", _asset_names[atype], _asset_table[atype].consumers);
 
 	if (_asset_table[atype].consumers == 0) {
-		printf("WD: Alloc %s\n", _asset_names[atype]);
 		_assets_data[atype] = gayinvaders_malloc(ass_info->h*ass_info->w*2);
 		wd_read_asset_direct(atype, _assets_data[atype], 0, 0, ass_info->w, ass_info->h);
 	}

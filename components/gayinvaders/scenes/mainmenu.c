@@ -1,5 +1,6 @@
 #include "gameobject.h"
 #include "gayinvaders.h"
+#include "inputs.h"
 #include "renderer.h"
 #include "scene.h"
 #include "timers.h"
@@ -44,14 +45,26 @@ static void _render_state(void)
 	renderer_flush();
 }
 
-static timer_handle_t *_next_tim = NULL;
-
-static void _next(void *data)
+static void _on_down_press()
 {
 	_selected_btn = (_selected_btn+1) % BUTTONS_CNT;
-	_render_state();
-	if (_selected_btn == BUTTONS_CNT-1)
+}
+
+static void _on_up_press()
+{
+	_selected_btn = _selected_btn-1;
+
+	if (_selected_btn < 0)
+		_selected_btn = BUTTONS_CNT-1;
+}
+
+static void _on_fire_press()
+{
+	switch (_selected_btn) {
+	case 0:
 		_new_scene = SCENE_TYPE_GAME;
+		break;
+	}
 }
 
 static void _init()
@@ -59,6 +72,10 @@ static void _init()
 	const asset_info_t *ass_inf;
 	asset_type_t ass_type;
 	int i;
+
+	inputs_set_on_handler(INPUT_DOWN, _on_down_press);
+	inputs_set_on_handler(INPUT_UP, _on_up_press);
+	inputs_set_on_handler(INPUT_FIRE_NORMAL, _on_fire_press);
 
 	for (i = 0; i < BUTTONS_CNT; ++i) {
 		ass_type = ASSET_TYPE_MAINMENUBTN0+i;
@@ -84,16 +101,11 @@ static void _init()
 	_selector.ro.parent = &_selector.go;
 
 	_render_state();
-
-	_next_tim = timers_start(500, true, NULL, _next);
 }
 
 static void _end(void)
 {
 	int i;
-
-	if (_next_tim)
-		timers_stop(_next_tim);
 
 	for (i = 0; i < BUTTONS_CNT; ++i)
 		wd_not_using(ASSET_TYPE_MAINMENUBTN0+i);

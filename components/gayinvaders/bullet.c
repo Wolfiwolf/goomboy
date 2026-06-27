@@ -30,11 +30,6 @@ static bullet_type_conf_t _configs[BULLET_TYPE_CNT] = {
 	}
 };
 
-
-// static const uint16_t *_bullet_img[BULLET_TYPE_CNT] = {};
-
-// static const uint16_t *_bullet_hit_img[BULLET_TYPE_CNT] = {};
-
 void bullet_init(bullet_t *b)
 {
 
@@ -73,12 +68,10 @@ void bullet_activate(bullet_t *b, bullet_type_t type,
 	// Load hit asset
 	ass_type = ASSET_TYPE_BULLETNORMALHIT+type;
 	ass_inf = wd_get_asset_info(ass_type);
-	// _bullet_hit_img[type] = wd_get_asset(ass_type);
 
 	// Load asset
 	ass_type = ASSET_TYPE_BULLETNORMAL+type;
 	ass_inf = wd_get_asset_info(ass_type);
-	// _bullet_img[type] = wd_get_asset(ass_type);
 
 	// Setup
 	_get_dir(x, y, targetx, targety, &dirx, &diry);
@@ -86,7 +79,6 @@ void bullet_activate(bullet_t *b, bullet_type_t type,
 	// Render
 	b->ro.w = ass_inf->w;
 	b->ro.h = ass_inf->h;
-	// b->ro.buff = _bullet_img[type];
 	b->ro.buff = wd_get_asset(ASSET_TYPE_BULLETNORMAL+type);
 
 	// Bullet specifics
@@ -127,9 +119,9 @@ void bullet_update(bullet_t *b, float dt)
 void bullet_diactivate(bullet_t *b)
 {
 	wd_not_using(ASSET_TYPE_BULLETNORMAL+b->type);
-	wd_not_using(ASSET_TYPE_BULLETNORMALHIT+b->type);
-	// _bullet_img[b->type] = NULL;
-	// _bullet_hit_img[b->type] = NULL;
+
+	if (b->has_hit)
+		wd_not_using(ASSET_TYPE_BULLETNORMALHIT+b->type);
 	b->go.active = false;
 }
 
@@ -151,9 +143,7 @@ void bullet_hit(bullet_t *b)
 
 	b->ro.w = ass_inf->w;
 	b->ro.h = ass_inf->h;
-	// b->ro.buff = _bullet_hit_img[b->type];
 	b->ro.buff = wd_get_asset(ASSET_TYPE_BULLETNORMALHIT+b->type);
-	// TODO: Double not using fix
 
 	timers_start(1000, false, b, _diactivate);
 }

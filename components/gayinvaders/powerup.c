@@ -16,9 +16,6 @@ static powerup_type_conf_t _configs[POWERUP_TYPE_CNT] = {
 	},
 };
 
-static int _powerup_img_consumers[POWERUP_TYPE_CNT] = { };
-static const uint16_t *_powerup_img[POWERUP_TYPE_CNT] = {};
-
 void powerup_init(powerup_t *pu)
 {
 	pu->go.type = GAME_OBJECT_TYPE_POWERUP;
@@ -27,17 +24,7 @@ void powerup_init(powerup_t *pu)
 
 void powerup_destroy(powerup_t *pu)
 {
-	int i;
-
-	for (i = 0; i < POWERUP_TYPE_CNT; ++i) {
-		if (_powerup_img[i]) {
-			_powerup_img_consumers[i] -= 1;
-			if (_powerup_img_consumers[i] == 0) {
-				wd_not_using(ASSET_TYPE_POWERUPHEALTH + i);
-				_powerup_img[i] = NULL;
-			}
-		}
-	}
+	powerup_diactivate(pu);
 }
 
 void powerup_activate(powerup_t *pu, powerup_type_t type,
@@ -50,14 +37,9 @@ void powerup_activate(powerup_t *pu, powerup_type_t type,
 
 	ass_inf = wd_get_asset_info(ass_type);
 
-	if (!_powerup_img[type]) {
-		_powerup_img[type] = wd_get_asset(ass_type);
-		_powerup_img_consumers[type] += 1;
-	}
-
 	pu->ro.w = ass_inf->w;
 	pu->ro.h = ass_inf->h;
-	pu->ro.buff = _powerup_img[type];
+	pu->ro.buff = wd_get_asset(ass_type);
 
 	pu->type = type;
 	pu->speed = _configs[type].speed;
@@ -73,6 +55,10 @@ void powerup_activate(powerup_t *pu, powerup_type_t type,
 
 void powerup_diactivate(powerup_t *pu)
 {
+	if (!pu->go.active)
+		return;
+
+	wd_not_using(ASSET_TYPE_POWERUPHEALTH + pu->type);
 	pu->go.active = false;
 }
 
@@ -83,5 +69,3 @@ void powerup_update(powerup_t *pu, float dt)
 	if (pu->go.y >= SCREEN_H + pu->ro.h)
 		pu->go.active = false;
 }
-
-

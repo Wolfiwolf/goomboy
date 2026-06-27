@@ -55,10 +55,7 @@ static enemy_config_t _configs[ENEMY_TYPE_CNT] = {
 
 void enemy_init(enemy_t *e)
 {
-	const asset_info_t *ass_inf;
 	int i;
-
-	ass_inf = wd_get_asset_info(ASSET_TYPE_HEALTHBARBLOCK);
 
 	memset(e, 0, sizeof(enemy_t));
 	
@@ -70,7 +67,7 @@ void enemy_init(enemy_t *e)
 
 void enemy_destroy(enemy_t *e)
 {
-	// Empty
+	enemy_diactivate(e);
 }
 
 static void _change_img_to_idle(void *data)
@@ -105,7 +102,6 @@ void enemy_update(enemy_t *e, float dt,
 		if (e->go.x-(float)e->images[0].w/2 <= 0)
 			e->go.vx = speedx;
 	}
-
 
 	if (e->shoot_countdown) {
 		e->shoot_countdown -= dt*1000;
@@ -223,6 +219,9 @@ void enemy_diactivate(enemy_t *e)
 {
 	int i;
 
+	if (!e->go.active)
+		return;
+
 	e->go.active = false;
 	for (i = 0; i < ENEMY_IMG_CNT; ++i)
 		wd_not_using(ASSET_TYPE_ENEMYEASYIDLE+e->enemy_type*3+i);
@@ -246,7 +245,7 @@ void enemy_damage(enemy_t *e, int damage)
 		enemy_kill(e);
 	} else {
 		e->active_image = ENEMY_IMG_PAIN;
-		timers_start(500, false, e, _change_img_to_idle);
+		timers_start(250, false, e, _change_img_to_idle);
 	}
 }
 
