@@ -16,6 +16,7 @@ typedef struct {
 	int turn_distance;
 	int shoot_countdown;
 	bullet_type_t bullet_type;
+	asset_type_t images[ENEMY_IMG_CNT];
 } enemy_config_t;
 
 static enemy_config_t _configs[ENEMY_TYPE_CNT] = {
@@ -26,6 +27,11 @@ static enemy_config_t _configs[ENEMY_TYPE_CNT] = {
 		.turn_distance = 0,
 		.shoot_countdown = 2500,
 		.bullet_type = BULLET_TYPE_ENEMY_NORMAL,
+		.images = {
+			ASSET_TYPE_ENEMYEASYIDLE,
+			ASSET_TYPE_ENEMYEASYSHOOT,
+			ASSET_TYPE_ENEMYEASYPAIN,
+		}
 	},
 	{ // MOVING
 		.health = 2,
@@ -34,6 +40,11 @@ static enemy_config_t _configs[ENEMY_TYPE_CNT] = {
 		.turn_distance = 100,
 		.shoot_countdown = 2500,
 		.bullet_type = BULLET_TYPE_ENEMY_NORMAL,
+		.images = {
+			ASSET_TYPE_ENEMYMOVINGIDLE,
+			ASSET_TYPE_ENEMYMOVINGSHOOT,
+			ASSET_TYPE_ENEMYMOVINGPAIN,
+		}
 	},
 	{ // FAST
 		.health = 1,
@@ -42,14 +53,24 @@ static enemy_config_t _configs[ENEMY_TYPE_CNT] = {
 		.turn_distance = 0,
 		.shoot_countdown = 0,
 		.bullet_type = BULLET_TYPE_ENEMY_NORMAL,
+		.images = {
+			ASSET_TYPE_ENEMYFASTIDLE,
+			ASSET_TYPE_ENEMYFASTSHOOT,
+			ASSET_TYPE_ENEMYFASTPAIN,
+		}
 	},
 	{ // TANK
 		.health = ENEMY_MAX_HEALTH,
 		.speedx = 50,
 		.speedy = 15,
 		.turn_distance = 0,
-		.shoot_countdown = 0,
+		.shoot_countdown = 1000,
 		.bullet_type = BULLET_TYPE_ENEMY_NORMAL,
+		.images = {
+			ASSET_TYPE_ENEMYTANKIDLE,
+			ASSET_TYPE_ENEMYTANKSHOOT,
+			ASSET_TYPE_ENEMYTANKPAIN,
+		}
 	}
 };
 
@@ -162,7 +183,7 @@ void enemy_activate(enemy_t *e, enemy_type_t type, int x, int y)
 	const asset_info_t *ass_inf;
 	int i;
 
-	ass_inf = wd_get_asset_info(ASSET_TYPE_ENEMYEASYIDLE+type*ENEMY_IMG_CNT);
+	ass_inf = wd_get_asset_info(_configs[type].images[ENEMY_IMG_IDLE]);
 
 	// Position
 	
@@ -194,7 +215,7 @@ void enemy_activate(enemy_t *e, enemy_type_t type, int x, int y)
 	for (i = 0; i < ENEMY_IMG_CNT; ++i) {
 		e->images[i].w = ass_inf->w;
 		e->images[i].h = ass_inf->h;
-		e->images[i].buff = wd_get_asset(ASSET_TYPE_ENEMYEASYIDLE+e->enemy_type*ENEMY_IMG_CNT+i);
+		e->images[i].buff = wd_get_asset(_configs[type].images[i]);
 		e->collision_radius = ass_inf->w/2;
 	}
 
@@ -224,7 +245,7 @@ void enemy_diactivate(enemy_t *e)
 
 	e->go.active = false;
 	for (i = 0; i < ENEMY_IMG_CNT; ++i)
-		wd_not_using(ASSET_TYPE_ENEMYEASYIDLE+e->enemy_type*3+i);
+		wd_not_using(_configs[e->enemy_type].images[i]);
 
 	for (i = 0; i < ENEMY_MAX_HEALTH; ++i) {
 		e->health_blocks[i].go.active = false;

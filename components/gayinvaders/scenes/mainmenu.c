@@ -48,6 +48,7 @@ static void _render_state(void)
 static void _on_down_press()
 {
 	_selected_btn = (_selected_btn+1) % BUTTONS_CNT;
+	_render_state();
 }
 
 static void _on_up_press()
@@ -56,6 +57,7 @@ static void _on_up_press()
 
 	if (_selected_btn < 0)
 		_selected_btn = BUTTONS_CNT-1;
+	_render_state();
 }
 
 static void _on_fire_press()
@@ -90,7 +92,6 @@ static void _init()
 		_buttons[i].go.y = ((float)SCREEN_H/4)*(i+1);
 		_buttons[i].go.active = true;
 	}
-
 
 	ass_type = ASSET_TYPE_MAINMENUSELECTOR;
 	ass_inf = wd_get_asset_info(ass_type);

@@ -39,12 +39,6 @@ static timer_handle_t *_enemy_spawner_tim = NULL;
 static timer_handle_t *_powerup_spawner_tim = NULL;
 
 static int _level = 1;
-static int _enemy_formation_index = 0;
-static int _enemy_formations[3][3] = {
-	{0, 1, 0},
-	{0, 1, 0},
-	{0, 1, 0},
-};
 
 static bool _player_killed_triggered = false;
 
