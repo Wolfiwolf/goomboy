@@ -15,7 +15,7 @@ typedef enum {
 	INPUT_START,
 	INPUT_FIRE_NORMAL,
 	INPUT_FIRE_BOMB,
-	INPUT_X,
+	INPUT_SHIELD,
 	INPUT_COUNT,
 } input_t;
 

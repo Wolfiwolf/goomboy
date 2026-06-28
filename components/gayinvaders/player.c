@@ -105,15 +105,20 @@ void player_fire(player_t *p, bullet_type_t bullet_type,
 	if (p->dead)
 		return;
 
-	current_t = gayinvaders_get_ms();
-
-	if (current_t - p->prev_shot_t < NORMAL_SHOOT_INTERVAL)
-		return;
-	p->prev_shot_t = current_t;
-
 	// Is it a player bullet
 	if (!bullet_is_players(bullet_type))
 		return;
+
+	if (bullet_type == BULLET_TYPE_NORMAL) {
+		current_t = gayinvaders_get_ms();
+		if (current_t - p->prev_shot_t < NORMAL_SHOOT_INTERVAL)
+			return;
+		p->prev_shot_t = current_t;
+	} else if (bullet_type == BULLET_TYPE_BOMB) {
+		if (!p->has_bomb)
+			return;
+		p->has_bomb = false;
+	}
 
 	for (i = 0; i < bullets_cnt; ++i) {
 		bullet_t *b = &bullets[i];
@@ -123,9 +128,6 @@ void player_fire(player_t *p, bullet_type_t bullet_type,
 
 		bullet_activate(b, bullet_type, p->go.x, p->go.y,
 				p->go.x, p->go.y-10);
-
-		if (bullet_type != BULLET_TYPE_NORMAL)
-			p->ammo[bullet_type-BULLET_PLAYER_SPECIAL_START] -= 1;
 		break;
 	}
 }
@@ -155,6 +157,9 @@ void player_shield_up(player_t *p)
 {
 	const asset_info_t *ass_inf = wd_get_asset_info(ASSET_TYPE_SHIELD);
 
+	if (!p->has_shield)
+		return;
+
 	if (p->shield_up)
 		timers_stop(p->shield_timer);
 
@@ -166,4 +171,6 @@ void player_shield_up(player_t *p)
 	p->shield.ro.h = ass_inf->h;
 
 	p->shield_up = true;
+
+	p->has_shield = false;
 }

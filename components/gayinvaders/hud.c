@@ -3,7 +3,6 @@
 #include "wd.h"
 
 static const uint16_t *_hb_block_image = NULL;
-static const uint16_t *_hb_ammo_images[BULLET_PLAYER_SPECIAL_CNT] = {};
 
 #define HEALTHBAR_START 100
 #define AMMO_START      (SCREEN_W-100)
@@ -30,35 +29,42 @@ void hud_init(hud_t *hb, int x, int y)
 		hb->blocks[i].go.active = true;
 	}
 
-	for (i = 0; i < BULLET_PLAYER_SPECIAL_CNT; ++i) {
-		asset_type_t ass_type = ASSET_TYPE_AMMO0+i;
-		const asset_info_t *ass_inf;
+	// Bomb
+	ass_inf = wd_get_asset_info(ASSET_TYPE_AMMO0);
 
-		ass_inf = wd_get_asset_info(ass_type);
+	hb->bomb.ro.parent = &hb->bomb.go;
+	hb->bomb.ro.buff = wd_get_asset(ASSET_TYPE_AMMO0);
+	hb->bomb.ro.w = ass_inf->w;
+	hb->bomb.ro.h = ass_inf->h;
 
-		if (!_hb_ammo_images[i])
-			_hb_ammo_images[i] = wd_get_asset(ass_type);
+	hb->bomb.go.x = AMMO_START + (ass_inf->w*2) * 0;
+	hb->bomb.go.y = y;
 
-		hb->ammos[i].ro.parent = &hb->ammos[i].go;
-		hb->ammos[i].ro.buff = _hb_ammo_images[i];
-		hb->ammos[i].ro.w = ass_inf->w;
-		hb->ammos[i].ro.h = ass_inf->h;
+	hb->bomb.go.active = true;
 
-		hb->ammos[i].go.x = AMMO_START + (ass_inf->w*2) * i;
-		hb->ammos[i].go.y = y;
+	// Shield
+	ass_inf = wd_get_asset_info(ASSET_TYPE_AMMO0);
 
-		hb->ammos[i].go.active = true;
-	}
+	hb->shield.ro.parent = &hb->shield.go;
+	hb->shield.ro.buff = wd_get_asset(ASSET_TYPE_AMMO0);
+	hb->shield.ro.w = ass_inf->w;
+	hb->shield.ro.h = ass_inf->h;
+
+	hb->shield.go.x = AMMO_START + (ass_inf->w*2) * 1;
+	hb->shield.go.y = y;
+
+	hb->shield.go.active = true;
 }
 
-void hud_update(hud_t *hb, int health, bool bomb)
+void hud_update(hud_t *hb, int health, bool bomb, bool shield)
 {
 	int i;
 
 	for (i = 0; i < HUD_HEALTHBAR_BLOCKS; ++i)
 		hb->blocks[i].go.active = i+1 <= health;
 
-	hb->ammos[BULLET_TYPE_BOMB-BULLET_PLAYER_SPECIAL_START].go.active = bomb;
+	hb->bomb.go.active = bomb;
+	hb->shield.go.active = shield;
 }
 
 void hud_render(hud_t *hb)
@@ -68,6 +74,6 @@ void hud_render(hud_t *hb)
 	for (i = 0; i < HUD_HEALTHBAR_BLOCKS; ++i)
 		renderer_render(&hb->blocks[i].ro);
 
-	for (i = 0; i < BULLET_PLAYER_SPECIAL_CNT; ++i)
-	 	renderer_render(&hb->ammos[i].ro);
+	renderer_render(&hb->bomb.ro);
+	renderer_render(&hb->shield.ro);
 }

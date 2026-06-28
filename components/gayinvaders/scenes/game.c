@@ -53,8 +53,12 @@ static void _on_fire_normal_handler(void)
 
 static void _on_fire_bomb_handler(void)
 {
-	if (_player.ammo[BULLET_TYPE_BOMB - BULLET_PLAYER_SPECIAL_START])
-		player_fire(&_player, BULLET_TYPE_BOMB, _bullets, BULLETS_POOL_SIZE);
+	player_fire(&_player, BULLET_TYPE_BOMB, _bullets, BULLETS_POOL_SIZE);
+}
+
+static void _on_shield_handler(void)
+{
+	player_shield_up(&_player);
 }
 
 static enemy_t *_get_new_enemy(void)
@@ -122,7 +126,7 @@ static void _enemy_spawner(void *data)
 	_level += 1;
 	number_set_val(&_level_num, _level);
 
-	spawn_interval = ENEMY_SPAWN_INTERVAL - (_level * 200);
+	spawn_interval = ENEMY_SPAWN_INTERVAL - (_level * 250);
 
 	if (spawn_interval < ENEMY_MIN_SPAWN_INTERVAL)
 		spawn_interval = ENEMY_MIN_SPAWN_INTERVAL;
@@ -193,9 +197,9 @@ static void _on_collision(void *obj1, game_object_type_t type1, void *obj2, game
 				if (_player.health != PLAYER_MAX_HEALTH)
 					_player.health += 1;
 			} else if (pu->type == POWERUP_TYPE_BOMB) {
-				_player.ammo[BULLET_TYPE_BOMB - BULLET_PLAYER_SPECIAL_START] += 1;
+				_player.has_bomb = true;
 			} else if (pu->type == POWERUP_TYPE_SHIELD) {
-				player_shield_up(&_player);
+				_player.has_shield = true;
 			}
 
 			powerup_diactivate(pu);
@@ -210,6 +214,7 @@ static void _init()
 	/* Set input handlers */
 	inputs_set_on_handler(INPUT_FIRE_NORMAL, _on_fire_normal_handler);
 	inputs_set_on_handler(INPUT_FIRE_BOMB, _on_fire_bomb_handler);
+	inputs_set_on_handler(INPUT_SHIELD, _on_shield_handler);
 
 	player_init(&_player, SCREEN_W / 4, SCREEN_H-32);
 
@@ -282,7 +287,7 @@ static void _update(float dt)
 		collision_update();
 	}
 
-	hud_update(&_hud, _player.health, _player.ammo[0]);
+	hud_update(&_hud, _player.health, _player.has_bomb, _player.has_shield);
 }
 
 static void _render(void)

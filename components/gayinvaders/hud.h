@@ -19,12 +19,13 @@ typedef struct {
 
 typedef struct {
 	hud_health_block_t blocks[HUD_HEALTHBAR_BLOCKS];
-	hud_ammo_t ammos[BULLET_PLAYER_SPECIAL_CNT];
+	hud_ammo_t bomb;
+	hud_ammo_t shield;
 } hud_t;
 
 void hud_init(hud_t *hb, int x, int y);
 
-void hud_update(hud_t *hb, int health, bool ammo0);
+void hud_update(hud_t *hb, int health, bool bomb, bool shield);
 
 void hud_render(hud_t *hb);
 

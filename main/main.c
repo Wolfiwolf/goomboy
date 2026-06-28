@@ -123,6 +123,9 @@ input_state_t gayinvaders_get_input(input_t input)
 	case INPUT_FIRE_BOMB:
 		btn_shift = GPIO_BTN_B;
 		break;
+	case INPUT_SHIELD:
+		btn_shift = GPIO_BTN_X;
+		break;
 	}
 
 	is_on = !(btn_bitmap & (1<<btn_shift));

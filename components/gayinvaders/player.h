@@ -24,7 +24,8 @@ typedef struct {
 
 	int collision_radius;
 
-	bool ammo[BULLET_PLAYER_SPECIAL_CNT];
+	bool has_bomb;
+	bool has_shield;
 
 	size_t prev_shot_t;
 
