@@ -1,7 +1,6 @@
 #ifndef HUD_H_
 #define HUD_H_
 
-#include "bullet.h"
 #include "gameobject.h"
 #include "renderer.h"
 
@@ -25,6 +24,8 @@ typedef struct {
 } hud_t;
 
 void hud_init(hud_t *hb, int x, int y);
+
+void hud_destroy(hud_t *hb);
 
 void hud_update(hud_t *hb, int health, bool bomb, bool shield,
 		bool rapidfire);

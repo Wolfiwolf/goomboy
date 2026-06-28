@@ -2,8 +2,6 @@
 #include "gayinvaders.h"
 #include "wd.h"
 
-static const uint16_t *_hb_block_image = NULL;
-
 #define HEALTHBAR_START 100
 #define AMMO_START      (SCREEN_W-100)
 
@@ -14,12 +12,9 @@ void hud_init(hud_t *hb, int x, int y)
 
 	ass_inf = wd_get_asset_info(ASSET_TYPE_HEALTHBARBLOCK);
 
-	if (!_hb_block_image)
-		_hb_block_image = wd_get_asset(ASSET_TYPE_HEALTHBARBLOCK);
-	
 	for (i = 0; i < HUD_HEALTHBAR_BLOCKS; ++i) {
 		hb->blocks[i].ro.parent = &hb->blocks[i].go;
-		hb->blocks[i].ro.buff = _hb_block_image;
+		hb->blocks[i].ro.buff = wd_get_asset(ASSET_TYPE_HEALTHBARBLOCK);
 		hb->blocks[i].ro.w = ass_inf->w;
 		hb->blocks[i].ro.h = ass_inf->h;
 
@@ -63,10 +58,30 @@ void hud_init(hud_t *hb, int x, int y)
 	hb->rapidfire.ro.w = ass_inf->w;
 	hb->rapidfire.ro.h = ass_inf->h;
 
-	hb->rapidfire.go.x = AMMO_START + (ass_inf->w*2) * 1;
+	hb->rapidfire.go.x = AMMO_START + (ass_inf->w*2) * 2;
 	hb->rapidfire.go.y = y;
 
 	hb->rapidfire.go.active = true;
+}
+
+void hud_destroy(hud_t *hb)
+{
+	wd_not_using(ASSET_TYPE_HEALTHBARBLOCK);
+
+	if (hb->bomb.go.active) {
+		hb->bomb.go.active = false;
+		wd_not_using(ASSET_TYPE_AMMO0);
+	}
+
+	if (hb->shield.go.active) {
+		hb->shield.go.active = false;
+		wd_not_using(ASSET_TYPE_AMMO1);
+	}
+
+	if (hb->rapidfire.go.active) {
+		hb->rapidfire.go.active = false;
+		wd_not_using(ASSET_TYPE_AMMO2);
+	}
 }
 
 void hud_update(hud_t *hb, int health, bool bomb, bool shield,

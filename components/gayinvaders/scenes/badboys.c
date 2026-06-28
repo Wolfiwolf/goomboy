@@ -13,16 +13,13 @@ typedef struct {
 	int new_scene;
 } button_t;
 
-#define BUTTONS_CNT 3
+#define BUTTONS_CNT 5
 
 static uint16_t *_selector_image = NULL;
 static button_t _selector = {};
 
 static uint16_t *_button_images[BUTTONS_CNT] = {};
 static button_t _buttons[BUTTONS_CNT] = {
-	{ .new_scene = SCENE_TYPE_GAME },
-	{ .new_scene = SCENE_TYPE_BADBOYS },
-	{ .new_scene = -1 },
 };
 static int _selected_btn = 0;
 
@@ -38,7 +35,7 @@ static void _render_state(void)
 		renderer_render(&_buttons[i].ro);
 
 	_selector.go.x = (float)SCREEN_W/5;
-	_selector.go.y = ((float)SCREEN_H/4)*(_selected_btn+1);
+	_selector.go.y = _buttons[_selected_btn].go.y;
 	_selector.go.active = true;
 
 	renderer_flip_next();
@@ -67,7 +64,11 @@ static void _on_up_press()
 
 static void _on_fire_press()
 {
-	_new_scene = _buttons[_selected_btn].new_scene;
+	switch (_selected_btn) {
+	case 0:
+		_new_scene = SCENE_TYPE_GAME;
+		break;
+	}
 }
 
 static void _init()
@@ -81,7 +82,7 @@ static void _init()
 	inputs_set_on_handler(INPUT_FIRE_NORMAL, _on_fire_press);
 
 	for (i = 0; i < BUTTONS_CNT; ++i) {
-		ass_type = ASSET_TYPE_MAINMENUBTN0+i;
+		ass_type = ASSET_TYPE_BADBOYSBTN0+i;
 		ass_inf = wd_get_asset_info(ass_type);
 
 		_buttons[i].ro.buff = wd_get_asset(ass_type);
@@ -90,7 +91,7 @@ static void _init()
 		_buttons[i].ro.parent = &_buttons[i].go;
 
 		_buttons[i].go.x = (float)SCREEN_W/2;
-		_buttons[i].go.y = ((float)SCREEN_H/4)*(i+1);
+		_buttons[i].go.y = ((float)SCREEN_H/6)*(i+1);
 		_buttons[i].go.active = true;
 	}
 
@@ -110,7 +111,7 @@ static void _end(void)
 	int i;
 
 	for (i = 0; i < BUTTONS_CNT; ++i)
-		wd_not_using(ASSET_TYPE_MAINMENUBTN0+i);
+		wd_not_using(ASSET_TYPE_BADBOYSBTN0+i);
 
 	wd_not_using(ASSET_TYPE_MAINMENUSELECTOR);
 }
@@ -128,8 +129,7 @@ static scene_t _intro_scene = {
 	.end = _end,
 };
 
-scene_t *scenes_get_mainmenu_scene(void)
+scene_t *scenes_get_badboys_scene(void)
 {
 	return &_intro_scene;
 }
-

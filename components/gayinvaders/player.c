@@ -11,7 +11,7 @@
 
 #define NORMAL_SHOOT_INTERVAL 500
 
-#define RAPIDFIRE_SHOOT_INTERVAL 100
+#define RAPIDFIRE_SHOOT_INTERVAL 250
 
 void player_init(player_t *p, int x, int y)
 {

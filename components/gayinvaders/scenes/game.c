@@ -249,7 +249,7 @@ static void _init()
 			_on_collision);
 
 	_enemy_spawner_tim = timers_start(6000, true, NULL, _enemy_spawner);
-	_powerup_spawner_tim = timers_start(5000, true, NULL, _powerup_spawner);
+	_powerup_spawner_tim = timers_start(7000, true, NULL, _powerup_spawner);
 
 	_level = 0;
 	number_set_val(&_level_num, _level);
@@ -321,6 +321,11 @@ static void _render(void)
 static void _end()
 {
 	int i;
+
+	if (_enemy_spawner_tim)
+		timers_stop(_enemy_spawner_tim);
+	if (_powerup_spawner_tim)
+		timers_stop(_powerup_spawner_tim);
 	
 	for (i = 0; i < BULLETS_POOL_SIZE; ++i) {
 		bullet_t *b = &_bullets[i];
@@ -344,6 +349,8 @@ static void _end()
 	}
 
 	number_destroy(&_level_num);
+
+	hud_destroy(&_hud);
 
 	player_destroy(&_player);
 }
