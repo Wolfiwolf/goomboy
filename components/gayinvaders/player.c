@@ -43,6 +43,8 @@ void player_init(player_t *p, int x, int y)
 	p->prev_shot_t = gayinvaders_get_ms();
 
 	p->shield_up = false;
+	p->shield.go.active = false;
+	p->shield.ro.parent = &p->shield.go;
 
 	p->go.active = true;
 }
@@ -65,14 +67,16 @@ void player_update(player_t *p, float dt)
 		p->go.x = (float)p->ro.w/2;
 	else if (p->go.x + ((float)p->ro.w/2) >= SCREEN_W)
 		p->go.x = SCREEN_W - ((float)p->ro.w/2);
+
+	if (p->shield_up) {
+		p->shield.go.x = p->go.x;
+		p->shield.go.y = p->go.y - p->ro.h;
+	}
 }
 void player_render(player_t *p)
 {
 	renderer_render(&p->ro);
-
-	if (p->shield_up) {
-		
-	}
+	renderer_render(&p->shield.ro);
 }
 
 void player_go_stop(player_t *p)
@@ -124,19 +128,40 @@ void player_fire(player_t *p, bullet_type_t bullet_type,
 	}
 }
 
+void player_damage(player_t *p, int amount)
+{
+	if (p->shield_up)
+		return;
+
+	p->health -= amount;
+
+	if (p->health < 0)
+		p->health = 0;
+}
+
 static void _shield_timeout(void *data)
 {
 	player_t *p = data;
+
+	wd_not_using(ASSET_TYPE_SHIELD);
+	p->shield.go.active = false;
 
 	p->shield_up = false;
 }
 
 void player_shield_up(player_t *p)
 {
+	const asset_info_t *ass_inf = wd_get_asset_info(ASSET_TYPE_SHIELD);
+
 	if (p->shield_up)
 		timers_stop(p->shield_timer);
 
-	p->shield_timer = timers_start(6000, false, p, _shield_timeout);
+	p->shield_timer = timers_start(10000, false, p, _shield_timeout);
+
+	p->shield.go.active = true;
+	p->shield.ro.buff = wd_get_asset(ASSET_TYPE_SHIELD);
+	p->shield.ro.w = ass_inf->w;
+	p->shield.ro.h = ass_inf->h;
 
 	p->shield_up = true;
 }

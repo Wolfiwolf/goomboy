@@ -11,6 +11,13 @@
 typedef struct {
 	game_object_t go;
 	render_obj_t ro;
+} player_shield_t;
+
+typedef struct {
+	game_object_t go;
+	render_obj_t ro;
+
+	player_shield_t shield;
 
 	bool dead;
 	int health;
@@ -42,6 +49,8 @@ void player_go_right(player_t *p);
 
 void player_fire(player_t *p, bullet_type_t bullet_type,
 		 bullet_t *bullets, int bullets_cnt);
+
+void player_damage(player_t *p, int amount);
 
 void player_shield_up(player_t *p);
 

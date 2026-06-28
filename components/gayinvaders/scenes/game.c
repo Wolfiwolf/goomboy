@@ -123,8 +123,7 @@ static void _powerup_spawner(void *data)
 	if (!pu)
 		return;
 
-	//powerup_activate(pu, rand() % POWERUP_TYPE_CNT, SCREEN_W_HALF, -pu->ro.h);
-	powerup_activate(pu, rand() % POWERUP_TYPE_SHIELD,
+	powerup_activate(pu, rand() % POWERUP_TYPE_CNT,
 			(rand() % (SCREEN_W - pu->ro.w))+(pu->ro.w/2),
 			 -pu->ro.h);
 }
@@ -175,7 +174,7 @@ static void _on_collision(void *obj1, game_object_type_t type1, void *obj2, game
 	if (type1 == GAME_OBJECT_TYPE_PLAYER) {
 		if (type2 == GAME_OBJECT_TYPE_BULLET) {
 			bullet_t *b = obj2;
-			_player.health -= b->damage;
+			player_damage(&_player, b->damage);
 			bullet_hit(b);
 		} else if (type2 == GAME_OBJECT_TYPE_POWERUP) {
 			powerup_t *pu = obj2;
