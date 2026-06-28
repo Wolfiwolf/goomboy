@@ -34,7 +34,7 @@ static enemy_config_t _configs[ENEMY_TYPE_CNT] = {
 		}
 	},
 	{ // MOVING
-		.health = 2,
+		.health = 3,
 		.speedx = 50,
 		.speedy = 15,
 		.turn_distance = 100,
