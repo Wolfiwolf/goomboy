@@ -43,10 +43,10 @@ void hud_init(hud_t *hb, int x, int y)
 	hb->bomb.go.active = true;
 
 	// Shield
-	ass_inf = wd_get_asset_info(ASSET_TYPE_AMMO0);
+	ass_inf = wd_get_asset_info(ASSET_TYPE_AMMO1);
 
 	hb->shield.ro.parent = &hb->shield.go;
-	hb->shield.ro.buff = wd_get_asset(ASSET_TYPE_AMMO0);
+	hb->shield.ro.buff = wd_get_asset(ASSET_TYPE_AMMO1);
 	hb->shield.ro.w = ass_inf->w;
 	hb->shield.ro.h = ass_inf->h;
 

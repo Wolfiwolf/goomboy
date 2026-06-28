@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <math.h>
 #include <stdio.h>
 #include "bullet.h"
@@ -58,8 +59,8 @@ static void _get_dir(float ox, float oy, float tx, float ty,
 	}
 }
 
-void bullet_activate(bullet_t *b, bullet_type_t type,
-		     int x, int y, int targetx, int targety)
+int bullet_activate(bullet_t *b, bullet_type_t type,
+		    int x, int y, int targetx, int targety)
 {
 	const asset_info_t *ass_inf;
 	asset_type_t ass_type;
@@ -80,6 +81,8 @@ void bullet_activate(bullet_t *b, bullet_type_t type,
 	b->ro.w = ass_inf->w;
 	b->ro.h = ass_inf->h;
 	b->ro.buff = wd_get_asset(ASSET_TYPE_BULLETNORMAL+type);
+	if (!b->ro.buff)
+		return -ENOMEM;
 
 	// Bullet specifics
 	b->type = type;
@@ -99,6 +102,8 @@ void bullet_activate(bullet_t *b, bullet_type_t type,
 	b->go.ay = diry * _configs[type].acceleration;
 
 	b->go.active = true;
+
+	return 0;
 }
 
 void bullet_update(bullet_t *b, float dt)

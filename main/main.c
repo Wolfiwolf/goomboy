@@ -161,12 +161,7 @@ input_state_t gayinvaders_get_input(input_t input)
 
 void *gayinvaders_malloc(size_t sz)
 {
-	multi_heap_info_t meminfo;
-
-	heap_caps_get_info(&meminfo, MALLOC_CAP_8BIT);
-
-	// ESP_LOGE("", "ALLOCATION: Free mem: %lu, big block: %lu, allocating: %lu", meminfo.total_free_bytes, meminfo.largest_free_block, sz);
-	void *ptr = heap_caps_malloc(sz, MALLOC_CAP_8BIT);
+	void *ptr = heap_caps_malloc(sz, MALLOC_CAP_DEFAULT);
 
 	if (!ptr)
 		ESP_LOGE("", "MALLOC OF %lu FAILED!", sz);

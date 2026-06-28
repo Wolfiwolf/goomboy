@@ -29,8 +29,8 @@ void bullet_init(bullet_t *b);
 
 void bullet_destroy(bullet_t *b);
 
-void bullet_activate(bullet_t *b, bullet_type_t type,
-		     int x, int y, int targetx, int targety);
+int bullet_activate(bullet_t *b, bullet_type_t type,
+		    int x, int y, int targetx, int targety);
 
 void bullet_diactivate(bullet_t *b);
 

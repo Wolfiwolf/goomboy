@@ -37,9 +37,9 @@ static enemy_t _enemies[ENEMY_POOL_SIZE] = {};
 static timer_handle_t *_enemy_spawner_tim = NULL;
 static timer_handle_t *_powerup_spawner_tim = NULL;
 
-#define ENEMY_SPAWN_INTERVAL 6000
-#define ENEMY_MIN_SPAWN_INTERVAL 1000
-static int _level = 1;
+#define ENEMY_SPAWN_INTERVAL 5000
+#define ENEMY_MIN_SPAWN_INTERVAL 1500
+static int _level = 0;
 static number_t _level_num;
 
 static bool _player_killed_triggered = false;

@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <string.h>
 #include "player.h"
 #include "bullet.h"
@@ -122,12 +123,15 @@ void player_fire(player_t *p, bullet_type_t bullet_type,
 
 	for (i = 0; i < bullets_cnt; ++i) {
 		bullet_t *b = &bullets[i];
+		int ret;
 
 		if (b->go.active)
 			continue;
 
-		bullet_activate(b, bullet_type, p->go.x, p->go.y,
-				p->go.x, p->go.y-10);
+		ret = bullet_activate(b, bullet_type, p->go.x, p->go.y,
+				      p->go.x, p->go.y-10);
+		if (ret)
+			printf("Bullet alloc failed!\n");
 		break;
 	}
 }
