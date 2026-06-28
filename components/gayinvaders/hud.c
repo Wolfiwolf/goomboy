@@ -54,9 +54,23 @@ void hud_init(hud_t *hb, int x, int y)
 	hb->shield.go.y = y;
 
 	hb->shield.go.active = true;
+
+	// Rapid fire
+	ass_inf = wd_get_asset_info(ASSET_TYPE_AMMO2);
+
+	hb->rapidfire.ro.parent = &hb->rapidfire.go;
+	hb->rapidfire.ro.buff = wd_get_asset(ASSET_TYPE_AMMO2);
+	hb->rapidfire.ro.w = ass_inf->w;
+	hb->rapidfire.ro.h = ass_inf->h;
+
+	hb->rapidfire.go.x = AMMO_START + (ass_inf->w*2) * 1;
+	hb->rapidfire.go.y = y;
+
+	hb->rapidfire.go.active = true;
 }
 
-void hud_update(hud_t *hb, int health, bool bomb, bool shield)
+void hud_update(hud_t *hb, int health, bool bomb, bool shield,
+		bool rapidfire)
 {
 	int i;
 
@@ -65,6 +79,7 @@ void hud_update(hud_t *hb, int health, bool bomb, bool shield)
 
 	hb->bomb.go.active = bomb;
 	hb->shield.go.active = shield;
+	hb->rapidfire.go.active = rapidfire;
 }
 
 void hud_render(hud_t *hb)
@@ -76,4 +91,5 @@ void hud_render(hud_t *hb)
 
 	renderer_render(&hb->bomb.ro);
 	renderer_render(&hb->shield.ro);
+	renderer_render(&hb->rapidfire.ro);
 }

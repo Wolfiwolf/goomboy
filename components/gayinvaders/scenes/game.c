@@ -61,6 +61,11 @@ static void _on_shield_handler(void)
 	player_shield_up(&_player);
 }
 
+static void _on_rapidfire_handler(void)
+{
+	player_rapidfire_on(&_player);
+}
+
 static enemy_t *_get_new_enemy(void)
 {
 	int i;
@@ -200,6 +205,8 @@ static void _on_collision(void *obj1, game_object_type_t type1, void *obj2, game
 				_player.has_bomb = true;
 			} else if (pu->type == POWERUP_TYPE_SHIELD) {
 				_player.has_shield = true;
+			} else if (pu->type == POWERUP_TYPE_RAPIDFIRE) {
+				_player.has_rapidfire = true;
 			}
 
 			powerup_diactivate(pu);
@@ -215,6 +222,7 @@ static void _init()
 	inputs_set_on_handler(INPUT_FIRE_NORMAL, _on_fire_normal_handler);
 	inputs_set_on_handler(INPUT_FIRE_BOMB, _on_fire_bomb_handler);
 	inputs_set_on_handler(INPUT_SHIELD, _on_shield_handler);
+	inputs_set_on_handler(INPUT_RAPIDFIRE, _on_rapidfire_handler);
 
 	player_init(&_player, SCREEN_W / 4, SCREEN_H-32);
 
@@ -262,7 +270,7 @@ static void _update(float dt)
 			player_go_right(&_player);
 	}
 
-	player_update(&_player, dt);
+	player_update(&_player, dt, _bullets, BULLETS_POOL_SIZE);
 
 	if (_player.dead) {
 		_player_killed();
@@ -287,7 +295,8 @@ static void _update(float dt)
 		collision_update();
 	}
 
-	hud_update(&_hud, _player.health, _player.has_bomb, _player.has_shield);
+	hud_update(&_hud, _player.health, _player.has_bomb,
+		   _player.has_shield, _player.has_rapidfire);
 }
 
 static void _render(void)

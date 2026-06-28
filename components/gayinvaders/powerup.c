@@ -21,6 +21,10 @@ static powerup_type_conf_t _configs[POWERUP_TYPE_CNT] = {
 		.speed = 50,
 		.image = ASSET_TYPE_POWERUPSHIELD
 	},
+	{ // RAPIDFIRE
+		.speed = 50,
+		.image = ASSET_TYPE_POWERUPRAPIDFIRE
+	},
 };
 
 void powerup_init(powerup_t *pu)
