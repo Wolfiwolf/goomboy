@@ -55,6 +55,7 @@ void gayinvaders_main(int argc, char *argv[])
 
 		if (scenes[active_scene]->update)
 			scenes[active_scene]->update(dt);
+		gayinvaders_sleep_ms(15);
 
 		if (scenes[active_scene]->render) {
 			renderer_clear();

@@ -15,8 +15,6 @@ static asset_info_t _asset_table[ASSET_TYPE_COUNT] = {};
 static const char *_asset_names[ASSET_TYPE_COUNT] = {
 	"INTRO",
 	"DEAD",
-	"LEFTSIDE",
-	"RIGHTSIDE",
 	"MAINMENUSELECTOR",
 	"MAINMENUBTN0",
 	"MAINMENUBTN1",
@@ -46,6 +44,16 @@ static const char *_asset_names[ASSET_TYPE_COUNT] = {
 	"POWERUPBOMB",
 	"POWERUPSHIELD",
 	"SHIELD",
+	"NUM0",
+	"NUM1",
+	"NUM2",
+	"NUM3",
+	"NUM4",
+	"NUM5",
+	"NUM6",
+	"NUM7",
+	"NUM8",
+	"NUM9",
 };
 
 static uint16_t *_assets_data[ASSET_TYPE_COUNT] = {};
@@ -193,11 +201,17 @@ const uint16_t *wd_get_asset(asset_type_t atype)
 {
 	asset_info_t *ass_info = &_asset_table[atype];
 
-	if (_asset_table[atype].consumers == 0) {
-		_assets_data[atype] = gayinvaders_malloc(ass_info->h*ass_info->w*2);
-		wd_read_asset_direct(atype, _assets_data[atype], 0, 0, ass_info->w, ass_info->h);
+	if (_asset_table[atype].consumers) {
+		_asset_table[atype].consumers += 1;
+		return _assets_data[atype];
 	}
 
+	_assets_data[atype] = gayinvaders_malloc(ass_info->h*ass_info->w*2);
+
+	if (!_assets_data[atype])
+		return NULL;
+
+	wd_read_asset_direct(atype, _assets_data[atype], 0, 0, ass_info->w, ass_info->h);
 	_asset_table[atype].consumers += 1;
 
 	return _assets_data[atype];

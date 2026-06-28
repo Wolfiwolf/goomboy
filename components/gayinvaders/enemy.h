@@ -59,8 +59,8 @@ void enemy_update(enemy_t *e, float dt,
 
 void enemy_render(enemy_t *e);
 
-void enemy_activate(enemy_t *e, enemy_type_t type,
-		    int x, int y);
+int enemy_activate(enemy_t *e, enemy_type_t type,
+		   int x, int y);
 
 void enemy_diactivate(enemy_t *e);
 

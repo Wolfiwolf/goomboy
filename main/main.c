@@ -25,10 +25,6 @@
 #define SCREEN_START_X ((LCD_W_SIZE / 2) - (SCREEN_W / 2))
 #define SCREEN_START_Y ((LCD_H_SIZE / 2) - (SCREEN_H / 2))
 
-static uint16_t *_screen_buff;
-
-static uint16_t _prev_btn_map;
-
 static bool first = true;
 static int _buffers_transfering = 0;
 
@@ -57,6 +53,7 @@ void gayinvaders_render(const uint16_t ***screen_buff)
 	}
 
 	while (_buffers_transfering) { }
+
 
 	for (x = 0; x < SCREEN_FRAMES_X; ++x) {
 		for (y = 0; y < SCREEN_FRAMES_Y; ++y) {
@@ -95,6 +92,7 @@ static size_t _prev_shoot_t;
 input_state_t gayinvaders_get_input(input_t input)
 {
 	/*
+	*/
 	uint16_t btn_bitmap;
 	bool is_on = false;
 	int btn_shift;
@@ -130,10 +128,8 @@ input_state_t gayinvaders_get_input(input_t input)
 	is_on = !(btn_bitmap & (1<<btn_shift));
 
 	return is_on ? INPUT_STATE_ON : INPUT_STATE_OFF;
-	*/
 
 	/* Simulation
- */
 	size_t t = pdTICKS_TO_MS(xTaskGetTickCount());
 	// Shooting
 	if (t - _prev_shoot_t > 550 && t - _prev_shoot_t < 650 ) {
@@ -157,6 +153,7 @@ input_state_t gayinvaders_get_input(input_t input)
 		return INPUT_STATE_ON;
 
 	return INPUT_STATE_OFF;
+ */
 }
 
 void *gayinvaders_malloc(size_t sz)
@@ -184,13 +181,46 @@ size_t gayinvaders_free_mem(void)
 	return sys_get_free_mem();
 }
 
-static void turn_green(void)
-{
+#define SIDEBAR_SIZEX (LCD_W_SIZE - SCREEN_W)/2
 
-}
-
-static void turn_red(void)
+static void _draw_side_bard(void)
 {
+	// Pride flag colors (BGR565 — panel is BGR), spread across the 70px sidebar
+	uint16_t colors[SIDEBAR_SIZEX] = {
+		0x001C, 0x001C, 0x001C, 0x001C, 0x001C, 0x001C, 0x001C, 0x001C, 0x001C, 0x001C, 0x001C, 0x001C, // red    #E40303
+		0x047F, 0x047F, 0x047F, 0x047F, 0x047F, 0x047F, 0x047F, 0x047F, 0x047F, 0x047F, 0x047F, 0x047F, // orange #FF8C00
+		0x077F, 0x077F, 0x077F, 0x077F, 0x077F, 0x077F, 0x077F, 0x077F, 0x077F, 0x077F, 0x077F, 0x077F, // yellow #FFED00
+		0x2400, 0x2400, 0x2400, 0x2400, 0x2400, 0x2400, 0x2400, 0x2400, 0x2400, 0x2400, 0x2400, 0x2400, // green  #008026
+		0xFA60, 0xFA60, 0xFA60, 0xFA60, 0xFA60, 0xFA60, 0xFA60, 0xFA60, 0xFA60, 0xFA60, 0xFA60, // blue   #004DFF
+		0x802E, 0x802E, 0x802E, 0x802E, 0x802E, 0x802E, 0x802E, 0x802E, 0x802E, 0x802E, 0x802E, // violet #750787
+	};
+	const int szy =LCD_H_SIZE/2;
+	uint16_t buff[szy];
+	uint16_t rbuff[szy];
+	int x;
+
+	for (x = 0; x < SIDEBAR_SIZEX; ++x) {
+		uint16_t color = colors[x];
+		uint16_t rcolor = colors[SIDEBAR_SIZEX - 1 - x]; // reversed for right side
+		int i;
+
+		color = (color >> 8) | ((color & 0xFF) << 8);
+		rcolor = (rcolor >> 8) | ((rcolor & 0xFF) << 8);
+
+		for (i = 0; i < szy; ++i) {
+			buff[i] = color;
+			rbuff[i] = rcolor;
+		}
+
+		// left sidebar
+		lcd_draw(x, 0, 1, szy, buff);
+		lcd_draw(x, LCD_H_SIZE/2, 1, szy, buff);
+
+		// right sidebar (reversed)
+		lcd_draw(SCREEN_START_X + SCREEN_W + x, 0, 1, szy, rbuff);
+		lcd_draw(SCREEN_START_X + SCREEN_W + x, LCD_H_SIZE/2, 1, szy, rbuff);
+		vTaskDelay(pdMS_TO_TICKS(10));
+	}
 
 }
 
@@ -224,6 +254,8 @@ void app_main(void)
 		ESP_LOGE("", "SD card mount failed! Is DOOM1.WAD on a FAT-formatted card?");
 		stall();
 	}
+
+	_draw_side_bard();
 
 	srand(xTaskGetTickCount());
 

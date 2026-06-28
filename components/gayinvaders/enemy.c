@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -177,7 +178,7 @@ void enemy_render(enemy_t *e)
 	}
 }
 
-void enemy_activate(enemy_t *e, enemy_type_t type, int x, int y)
+int enemy_activate(enemy_t *e, enemy_type_t type, int x, int y)
 {
 	int tdist = _configs[type].turn_distance;
 	const asset_info_t *ass_inf;
@@ -216,6 +217,12 @@ void enemy_activate(enemy_t *e, enemy_type_t type, int x, int y)
 		e->images[i].w = ass_inf->w;
 		e->images[i].h = ass_inf->h;
 		e->images[i].buff = wd_get_asset(_configs[type].images[i]);
+		if (!e->images[i].buff) {
+			int j;
+			for (j = i; j >= 0; --j)
+				wd_not_using(_configs[type].images[j]);
+			return -ENOMEM;
+		}
 		e->collision_radius = ass_inf->w/2;
 	}
 
@@ -234,6 +241,8 @@ void enemy_activate(enemy_t *e, enemy_type_t type, int x, int y)
 	}
 
 	e->go.active = true;
+
+	return 0;
 }
 
 void enemy_diactivate(enemy_t *e)

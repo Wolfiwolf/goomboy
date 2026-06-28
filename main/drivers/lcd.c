@@ -31,10 +31,9 @@
 
 static esp_lcd_panel_handle_t s_panel;
 
-void (*_buffer_transfered_callback)(void);
+static void (*_buffer_transfered_callback)(void);
 
-static bool lcd_on_trans_done(esp_lcd_panel_io_handle_t io,
-			      esp_lcd_panel_io_event_data_t *edata,
+static bool lcd_on_trans_done(esp_lcd_panel_io_handle_t io, esp_lcd_panel_io_event_data_t *edata,
 			      void *user_ctx)
 {
 	if (_buffer_transfered_callback)
@@ -120,5 +119,6 @@ void lcd_clear(int sizex, int sizey, uint16_t color)
 		}
 	}
 
+	vTaskDelay(pdMS_TO_TICKS(100));
 	heap_caps_free(buffer);
 }

@@ -2,13 +2,13 @@
 #include "collisions.h"
 #include "enemy.h"
 #include "hud.h"
-#include "llist.h"
+#include "number.h"
 #include "player.h"
 #include "powerup.h"
 #include "scene.h"
 
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "gayinvaders.h"
@@ -17,7 +17,6 @@
 #include "physics.h"
 #include "renderer.h"
 #include "timers.h"
-#include "wd.h"
 
 static int _new_scene = -1;
 
@@ -39,7 +38,9 @@ static timer_handle_t *_enemy_spawner_tim = NULL;
 static timer_handle_t *_powerup_spawner_tim = NULL;
 
 #define ENEMY_SPAWN_INTERVAL 6000
+#define ENEMY_MIN_SPAWN_INTERVAL 1000
 static int _level = 1;
+static number_t _level_num;
 
 static bool _player_killed_triggered = false;
 
@@ -85,20 +86,23 @@ static void _start_boss_fight(void)
 
 static void _enemy_spawner(void *data)
 {
-	enemy_t *e = _get_new_enemy();
 	enemy_type_t maxtype;
+	int spawn_interval;
+	enemy_t *e;
 
 	if (_is_boss_fight)
 		return;
+
+	e = _get_new_enemy();
 
 	if (!e)
 		return;
 
 	if (_level < 2)
 		maxtype = ENEMY_TYPE_EASY;
-	else if (_level < 3)
+	else if (_level < 4)
 		maxtype = ENEMY_TYPE_MOVING;
-	else if (_level < 50)
+	else if (_level < 10)
 		maxtype = ENEMY_TYPE_FAST;
 	else if (_level < 20)
 		maxtype = ENEMY_TYPE_TANK;
@@ -110,9 +114,20 @@ static void _enemy_spawner(void *data)
 		return;
 	}
 
-	enemy_activate(e, rand() % (maxtype+1), -1, -e->images[0].h);
+	if (_level > 18)
+		enemy_activate(e, ENEMY_TYPE_TANK, -1, -e->images[0].h);
+	else
+		enemy_activate(e, rand() % (maxtype+1), -1, -e->images[0].h);
+
 	_level += 1;
-	timers_change_dur(_enemy_spawner_tim, ENEMY_SPAWN_INTERVAL - (_level * 100));
+	number_set_val(&_level_num, _level);
+
+	spawn_interval = ENEMY_SPAWN_INTERVAL - (_level * 200);
+
+	if (spawn_interval < ENEMY_MIN_SPAWN_INTERVAL)
+		spawn_interval = ENEMY_MIN_SPAWN_INTERVAL;
+
+	timers_change_dur(_enemy_spawner_tim, spawn_interval);
 }
 
 static void _powerup_spawner(void *data)
@@ -156,11 +171,6 @@ static void _player_killed(void)
 	timers_start(2000, false, NULL, _end_game);
 }
 
-static void _shoot_bomb(void *data)
-{
-	_on_fire_bomb_handler();
-}
-
 static void _on_collision(void *obj1, game_object_type_t type1, void *obj2, game_object_type_t type2)
 {
 	if (type1 == GAME_OBJECT_TYPE_ENEMY) {
@@ -184,7 +194,6 @@ static void _on_collision(void *obj1, game_object_type_t type1, void *obj2, game
 					_player.health += 1;
 			} else if (pu->type == POWERUP_TYPE_BOMB) {
 				_player.ammo[BULLET_TYPE_BOMB - BULLET_PLAYER_SPECIAL_START] += 1;
-				timers_start(1000, false, NULL, _shoot_bomb);
 			} else if (pu->type == POWERUP_TYPE_SHIELD) {
 				player_shield_up(&_player);
 			}
@@ -218,6 +227,8 @@ static void _init()
 
 	hud_init(&_hud, 50, SCREEN_H - 8);
 
+	number_init(&_level_num, 20, SCREEN_H-30);
+
 	collisions_init(&_player,
 			_bullets, BULLETS_POOL_SIZE,
 			_enemies, ENEMY_POOL_SIZE,
@@ -227,7 +238,9 @@ static void _init()
 	_enemy_spawner_tim = timers_start(6000, true, NULL, _enemy_spawner);
 	_powerup_spawner_tim = timers_start(5000, true, NULL, _powerup_spawner);
 
-	_level = 1;
+	_level = 0;
+	number_set_val(&_level_num, _level);
+	
 	_player_killed_triggered = false;
 }
 
@@ -286,6 +299,8 @@ static void _render(void)
 	for (i = 0; i < POWERUP_POOL_SIZE; ++i)
 		renderer_render(&_powerups[i].ro);
 
+	number_render(&_level_num);
+
 	hud_render(&_hud);
 }
 
@@ -313,6 +328,8 @@ static void _end()
 		enemy_diactivate(e);
 		enemy_destroy(e);
 	}
+
+	number_destroy(&_level_num);
 
 	player_destroy(&_player);
 }
