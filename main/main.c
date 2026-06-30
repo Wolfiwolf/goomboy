@@ -129,6 +129,14 @@ input_state_t gayinvaders_get_input(input_t input)
 	case INPUT_RAPIDFIRE:
 		btn_shift = GPIO_BTN_A;
 		break;
+	case INPUT_START:
+		btn_shift = GPIO_BTN_START;
+		break;
+	case INPUT_SELECT:
+		btn_shift = GPIO_BTN_SELECT;
+		break;
+	default:
+		return INPUT_STATE_OFF;
 	}
 
 	is_on = !(btn_bitmap & (1<<btn_shift));
