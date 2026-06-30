@@ -66,22 +66,18 @@ void hud_init(hud_t *hb, int x, int y)
 
 void hud_destroy(hud_t *hb)
 {
-	wd_not_using(ASSET_TYPE_HEALTHBARBLOCK);
+	int i;
 
-	if (hb->bomb.go.active) {
-		hb->bomb.go.active = false;
-		wd_not_using(ASSET_TYPE_AMMO0);
-	}
+	for (i = 0; i < HUD_HEALTHBAR_BLOCKS; ++i)
+		wd_not_using(ASSET_TYPE_HEALTHBARBLOCK);
 
-	if (hb->shield.go.active) {
-		hb->shield.go.active = false;
-		wd_not_using(ASSET_TYPE_AMMO1);
-	}
+	hb->bomb.go.active = false;
+	hb->shield.go.active = false;
+	hb->rapidfire.go.active = false;
 
-	if (hb->rapidfire.go.active) {
-		hb->rapidfire.go.active = false;
-		wd_not_using(ASSET_TYPE_AMMO2);
-	}
+	wd_not_using(ASSET_TYPE_AMMO0);
+	wd_not_using(ASSET_TYPE_AMMO1);
+	wd_not_using(ASSET_TYPE_AMMO2);
 }
 
 void hud_update(hud_t *hb, int health, bool bomb, bool shield,
