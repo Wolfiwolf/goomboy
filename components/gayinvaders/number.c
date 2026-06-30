@@ -78,9 +78,8 @@ void number_set_val(number_t *n, int val)
 		ass_inf = wd_get_asset_info(ASSET_TYPE_NUM0+d)	;
 
 		// Cleanup if it was set
-		if (dig->go.active) {
-			wd_not_using(ASSET_TYPE_NUM0+d);
-		}
+		if (dig->go.active)
+			wd_not_using(ASSET_TYPE_NUM0+dig->val);
 
 		if (i == 0)
 			prev_dig = NULL;
