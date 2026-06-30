@@ -102,8 +102,9 @@ static void _change_img_to_idle(void *data)
 
 void enemy_update(enemy_t *e, float dt,
 		  bullet_t *bullets, int bullets_cnt,
-		  game_object_t *player_go)
+		  player_t *player)
 {
+	game_object_t *player_go = &player->go;
 	int start_x;
 	int i;
 

@@ -3,6 +3,7 @@
 
 #include "bullet.h"
 #include "gameobject.h"
+#include "player.h"
 #include "renderer.h"
 
 #define ENEMY_X_POS_RANDOM -1
@@ -55,7 +56,7 @@ void enemy_destroy(enemy_t *e);
 
 void enemy_update(enemy_t *e, float dt,
 		  bullet_t *bullets, int bullets_cnt,
-		  game_object_t *player_go);
+		  player_t *player);
 
 void enemy_render(enemy_t *e);
 

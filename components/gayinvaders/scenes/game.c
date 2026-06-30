@@ -281,7 +281,7 @@ static void _update(float dt)
 			if (!e->go.active)
 				continue;
 
-			enemy_update(e, dt, _bullets, BULLETS_POOL_SIZE, &_player.go);
+			enemy_update(e, dt, _bullets, BULLETS_POOL_SIZE, &_player);
 			if (e->go.y >= SCREEN_H- (float)e->images[0].h/2) {
 				_player.health -= 3;
 				enemy_kill(e);
