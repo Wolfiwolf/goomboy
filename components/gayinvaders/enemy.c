@@ -158,7 +158,6 @@ basic_update:
 
 		ehb->go.x = start_x + i*ehb->ro.w;
 		ehb->go.y = e->go.y - (float)(e->images[e->active_image].h*3)/4;
-
 	}
 }
 
