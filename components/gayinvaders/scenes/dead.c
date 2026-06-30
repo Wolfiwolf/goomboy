@@ -20,6 +20,10 @@ static void _render_dead(void)
 	ro.parent = &go;
 
 	buff = gayinvaders_malloc(ro.w*ro.h*2);
+	while (!buff) {
+		gayinvaders_sleep_ms(10);
+		buff = gayinvaders_malloc(ro.w*ro.h*2);
+	}
 
 	renderer_clear();
 	for (x = 0; x < ass->w; x += ro.w) {
