@@ -290,6 +290,7 @@ void enemy_kill(enemy_t *e)
 	e->go.vx *= 0.3;
 	e->go.vy *= 0.3;
 	e->active_image = ENEMY_IMG_PAIN;
+	e->health = 0;
 	e->dead = true;
 
 	timers_start(1000, false, e, _kill_enemy);
