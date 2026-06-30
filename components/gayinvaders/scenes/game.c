@@ -66,6 +66,11 @@ static void _on_rapidfire_handler(void)
 	player_rapidfire_on(&_player);
 }
 
+static void _on_start_handler(void)
+{
+	_new_scene = SCENE_TYPE_MAINMENU;
+}
+
 static enemy_t *_get_new_enemy(void)
 {
 	int i;
@@ -223,6 +228,7 @@ static void _init()
 	inputs_set_on_handler(INPUT_FIRE_BOMB, _on_fire_bomb_handler);
 	inputs_set_on_handler(INPUT_SHIELD, _on_shield_handler);
 	inputs_set_on_handler(INPUT_RAPIDFIRE, _on_rapidfire_handler);
+	inputs_set_on_handler(INPUT_START, _on_start_handler);
 
 	player_init(&_player, SCREEN_W / 4, SCREEN_H-32);
 
@@ -323,6 +329,7 @@ static void _end()
 	inputs_set_on_handler(INPUT_FIRE_BOMB, NULL);
 	inputs_set_on_handler(INPUT_SHIELD, NULL);
 	inputs_set_on_handler(INPUT_RAPIDFIRE, NULL);
+	inputs_set_on_handler(INPUT_START, NULL);
 
 	if (_enemy_spawner_tim)
 		timers_stop(_enemy_spawner_tim);
