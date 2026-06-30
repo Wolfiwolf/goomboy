@@ -243,7 +243,6 @@ void app_main(void)
 	int argc = 2;
 	int ret;
 
-
 	ret = lcd_init(_lcd_buffer_transfered_handler);
 	if (ret) {
 		ESP_LOGE("", "LCD init failed!");
