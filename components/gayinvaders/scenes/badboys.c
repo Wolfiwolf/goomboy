@@ -110,6 +110,10 @@ static void _end(void)
 {
 	int i;
 
+	inputs_set_on_handler(INPUT_DOWN, NULL);
+	inputs_set_on_handler(INPUT_UP, NULL);
+	inputs_set_on_handler(INPUT_FIRE_NORMAL, NULL);
+
 	for (i = 0; i < BUTTONS_CNT; ++i)
 		wd_not_using(ASSET_TYPE_BADBOYSBTN0+i);
 

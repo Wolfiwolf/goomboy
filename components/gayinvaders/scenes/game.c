@@ -318,6 +318,12 @@ static void _end()
 {
 	int i;
 
+	/* Unset input handlers */
+	inputs_set_on_handler(INPUT_FIRE_NORMAL, NULL);
+	inputs_set_on_handler(INPUT_FIRE_BOMB, NULL);
+	inputs_set_on_handler(INPUT_SHIELD, NULL);
+	inputs_set_on_handler(INPUT_RAPIDFIRE, NULL);
+
 	if (_enemy_spawner_tim)
 		timers_stop(_enemy_spawner_tim);
 	if (_powerup_spawner_tim)
