@@ -8,6 +8,7 @@
 #include "drivers/sdcard.h"
 #include "esp_heap_caps.h"
 #include "esp_log.h"
+#include "esp_random.h"
 #include "esp_task_wdt.h"
 #include "freertos/idf_additions.h"
 #include "freertos/projdefs.h"
@@ -266,7 +267,7 @@ void app_main(void)
 
 	_draw_side_bard();
 
-	srand(xTaskGetTickCount());
+	srand(esp_random());
 
 	_prev_t = pdTICKS_TO_MS(xTaskGetTickCount());
 	_prev_shoot_t = pdTICKS_TO_MS(xTaskGetTickCount());
