@@ -114,6 +114,12 @@ void enemy_update(enemy_t *e, float dt,
 	if (e->dead)
 		goto basic_update;
 
+	if (e->go.y >= SCREEN_H - (float)e->images[0].h/2) {
+		player_damage(player, 3);
+		enemy_kill(e);
+		goto basic_update;
+	}
+
 	if (e->turn_distance != 0) {
 		int speedx = _configs[e->enemy_type].speedx;
 		if (e->go.x - e->turn_center >= e->turn_distance)

@@ -282,10 +282,6 @@ static void _update(float dt)
 				continue;
 
 			enemy_update(e, dt, _bullets, BULLETS_POOL_SIZE, &_player);
-			if (e->go.y >= SCREEN_H- (float)e->images[0].h/2) {
-				_player.health -= 3;
-				enemy_kill(e);
-			}
 		}
 		for (i = 0; i < BULLETS_POOL_SIZE; ++i)
 			bullet_update(&_bullets[i], dt);
