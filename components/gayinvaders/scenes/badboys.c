@@ -66,9 +66,26 @@ static void _on_fire_press()
 {
 	switch (_selected_btn) {
 	case 0:
-		_new_scene = SCENE_TYPE_GAME;
+		_new_scene = SCENE_TYPE_BADBOYSEASY;
+		break;
+	case 1:
+		_new_scene = SCENE_TYPE_BADBOYSMOVING;
+		break;
+	case 2:
+		_new_scene = SCENE_TYPE_BADBOYSFAST;
+		break;
+	case 3:
+		_new_scene = SCENE_TYPE_BADBOYSTANK;
+		break;
+	case 4:
+		_new_scene = SCENE_TYPE_BADBOYSBOSS;
 		break;
 	}
+}
+
+static void _on_select_press()
+{
+	_new_scene = SCENE_TYPE_MAINMENU;
 }
 
 static void _init()
@@ -80,6 +97,7 @@ static void _init()
 	inputs_set_on_handler(INPUT_DOWN, _on_down_press);
 	inputs_set_on_handler(INPUT_UP, _on_up_press);
 	inputs_set_on_handler(INPUT_FIRE_NORMAL, _on_fire_press);
+	inputs_set_on_handler(INPUT_SELECT, _on_select_press);
 
 	for (i = 0; i < BUTTONS_CNT; ++i) {
 		ass_type = ASSET_TYPE_BADBOYSBTN0+i;
@@ -113,6 +131,7 @@ static void _end(void)
 	inputs_set_on_handler(INPUT_DOWN, NULL);
 	inputs_set_on_handler(INPUT_UP, NULL);
 	inputs_set_on_handler(INPUT_FIRE_NORMAL, NULL);
+	inputs_set_on_handler(INPUT_SELECT, NULL);
 
 	for (i = 0; i < BUTTONS_CNT; ++i)
 		wd_not_using(ASSET_TYPE_BADBOYSBTN0+i);

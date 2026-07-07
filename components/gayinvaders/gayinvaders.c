@@ -19,6 +19,11 @@ void gayinvaders_main(int argc, char *argv[])
 		scenes_get_intro_scene(),
 		scenes_get_mainmenu_scene(),
 		scenes_get_badboys_scene(),
+		scenes_get_badboyseasy_scene(),
+		scenes_get_badboysmoving_scene(),
+		scenes_get_badboysfast_scene(),
+		scenes_get_badboystank_scene(),
+		scenes_get_badboysboss_scene(),
 		scenes_get_game_scene(),
 		scenes_get_dead_scene(),
 	};
