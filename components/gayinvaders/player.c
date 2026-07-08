@@ -7,7 +7,7 @@
 #include "timers.h"
 #include "wd.h"
 
-#define SPEEDX 200
+#define SPEEDX 400
 
 #define NORMAL_SHOOT_INTERVAL 500
 
