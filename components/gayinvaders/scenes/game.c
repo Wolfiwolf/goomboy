@@ -281,7 +281,6 @@ static void _update(float dt)
 	if (_player.dead) {
 		_player_killed();
 	} else {
-		physics_update(&_player.go, dt);
 		for (i = 0; i < ENEMY_POOL_SIZE; ++i) {
 			enemy_t *e = &_enemies[i];
 			if (!e->go.active)
