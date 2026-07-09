@@ -7,7 +7,7 @@
 #include "timers.h"
 #include "wd.h"
 
-#define SPEEDX 400
+#define SPEEDX 1000
 
 #define NORMAL_SHOOT_INTERVAL 500
 
@@ -39,7 +39,7 @@ void player_init(player_t *p, int x, int y)
 	p->go.ax = 0.0;
 	p->go.ay = 0.0;
 
-	p->go.resistance = 2.0f;
+	p->go.resistance = 5.0f;
 
 	// Player specific
 	p->health = 5;
