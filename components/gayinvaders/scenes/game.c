@@ -71,6 +71,18 @@ static void _on_select_handler(void)
 	_new_scene = SCENE_TYPE_MAINMENU;
 }
 
+static int _count_enemies(void)
+{
+	int cnt = 0;
+	int i;
+
+	for (i = 0; i < ENEMY_POOL_SIZE; ++i)
+		if (_enemies[i].go.active)
+			cnt += 1;
+
+	return cnt;
+}
+
 static enemy_t *_get_new_enemy(void)
 {
 	int i;
@@ -98,14 +110,22 @@ static void _start_boss_fight(void)
 	_is_boss_fight = true;
 }
 
+static void _go_to_boss(void *data)
+{
+	_new_scene = SCENE_TYPE_BOSSFIGHT;
+}
+
 static void _enemy_spawner(void *data)
 {
 	enemy_type_t maxtype;
 	int spawn_interval;
 	enemy_t *e;
 
-	if (_is_boss_fight)
+	if (_is_boss_fight) {
+		if (_count_enemies() == 0)
+			timers_start(2000, false, NULL, _go_to_boss);
 		return;
+	}
 
 	e = _get_new_enemy();
 
