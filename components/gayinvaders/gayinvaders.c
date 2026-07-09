@@ -8,7 +8,7 @@
 #include "timers.h"
 #include "wd.h"
 
-#define FREE_MEM_DISPLAY_INTERVAL 2000
+#define FREE_MEM_DISPLAY_INTERVAL 1000
 
 static float _prev_t = 0;
 static float _prev_mem_display_t = 0;
@@ -26,6 +26,7 @@ void gayinvaders_main(int argc, char *argv[])
 		scenes_get_badboysboss_scene(),
 		scenes_get_game_scene(),
 		scenes_get_dead_scene(),
+		scenes_get_bossfight_scene(),
 	};
 	int active_scene = 0;
 	int new_scene;
@@ -52,8 +53,10 @@ void gayinvaders_main(int argc, char *argv[])
 	fps_cnt = 0;
 
 	for (;;) {
-		dt = ((float)gayinvaders_get_ms() - (float)_prev_t) / 1000.0f;
-		_prev_t = gayinvaders_get_ms();
+		size_t t = gayinvaders_get_ms();
+
+		dt = ((float)t - (float)_prev_t) / 1000.0f;
+		_prev_t = t;
 
 		inputs_update();
 
@@ -68,7 +71,7 @@ void gayinvaders_main(int argc, char *argv[])
 			renderer_flush();
 		}
 
-		gayinvaders_sleep_ms(15);
+		gayinvaders_sleep_ms(10);
 
 		new_scene = scenes[active_scene]->change_scene();
 		if (new_scene > 0) {
@@ -81,9 +84,10 @@ void gayinvaders_main(int argc, char *argv[])
 		}
 
 		fps_cnt += 1;
-		if (gayinvaders_get_ms() - _prev_mem_display_t > FREE_MEM_DISPLAY_INTERVAL) {
+		t = gayinvaders_get_ms();
+		if (t - _prev_mem_display_t > FREE_MEM_DISPLAY_INTERVAL) {
 			printf("FPS: %.3f, Free mem: %lu\n", (float)FREE_MEM_DISPLAY_INTERVAL/(float)fps_cnt, gayinvaders_free_mem());
-			_prev_mem_display_t = gayinvaders_get_ms();
+			_prev_mem_display_t = t;
 			fps_cnt = 0;
 		}
 	}

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "collisions.h"
+#include "boss.h"
 #include "bullet.h"
 #include "enemy.h"
 #include "gameobject.h"
@@ -17,11 +18,13 @@ static enemy_t *_enemies;
 static int _enemies_cnt;
 static powerup_t *_powerups;
 static int _powerups_cnt;
+static boss_t *_boss;
 
 void collisions_init(player_t *player,
 		     bullet_t *bullets, int bullets_cnt,
 		     enemy_t *enemies, int enemies_cnt,
 		     powerup_t *powerups, int powerups_cnt,
+		     boss_t *boss,
 		     void (*on_collision)(void *obj1, game_object_type_t type1, void *obj2, game_object_type_t type2))
 {
 	_player = player;
@@ -33,6 +36,8 @@ void collisions_init(player_t *player,
 	_bullets_cnt = bullets_cnt;
 	_enemies_cnt = enemies_cnt;
 	_powerups_cnt = powerups_cnt;
+
+	_boss = boss;
 
 	_on_collision_handler = on_collision;
 }
@@ -77,6 +82,18 @@ void collision_update(void)
 				_on_collision_handler(e, e->go.type, b, b->go.type);
 				break;
 			}
+		}
+
+		if (_boss) {
+			float dist;
+
+			if (!_boss->go.active)
+				continue;
+
+			dist = _get_dist(&_boss->go, &b->go);
+
+			if (dist < _boss->collision_radius)
+				_on_collision_handler(_boss, _boss->go.type, b, b->go.type);
 		}
 	}
 

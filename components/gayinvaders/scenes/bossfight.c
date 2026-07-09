@@ -1,14 +1,13 @@
+#include "boss.h"
 #include "bullet.h"
 #include "collisions.h"
 #include "enemy.h"
 #include "hud.h"
-#include "number.h"
 #include "player.h"
 #include "powerup.h"
 #include "scene.h"
 
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "gayinvaders.h"
@@ -25,26 +24,17 @@ static int _new_scene = -1;
 static player_t _player;
 static hud_t _hud;
 
-#define BULLETS_POOL_SIZE 50
+static boss_t _boss;
+
+#define BULLETS_POOL_SIZE 100
 static bullet_t _bullets[BULLETS_POOL_SIZE] = {};
 
 #define POWERUP_POOL_SIZE 10
 static powerup_t _powerups[POWERUP_POOL_SIZE] = {};
 
-#define ENEMY_POOL_SIZE  15
-static enemy_t _enemies[ENEMY_POOL_SIZE] = {};
-
-static timer_handle_t *_enemy_spawner_tim = NULL;
 static timer_handle_t *_powerup_spawner_tim = NULL;
 
-#define ENEMY_SPAWN_INTERVAL 5000
-#define ENEMY_MIN_SPAWN_INTERVAL 1500
-static int _level = 0;
-static number_t _level_num;
-
 static bool _player_killed_triggered = false;
-
-static bool _is_boss_fight = false;
 
 static void _on_fire_normal_handler(void)
 {
@@ -71,29 +61,6 @@ static void _on_select_handler(void)
 	_new_scene = SCENE_TYPE_MAINMENU;
 }
 
-static int _count_enemies(void)
-{
-	int cnt = 0;
-	int i;
-
-	for (i = 0; i < ENEMY_POOL_SIZE; ++i)
-		if (_enemies[i].go.active)
-			cnt += 1;
-
-	return cnt;
-}
-
-static enemy_t *_get_new_enemy(void)
-{
-	int i;
-
-	for (i = 0; i < ENEMY_POOL_SIZE; ++i)
-		if (!_enemies[i].go.active)
-			return &_enemies[i];
-
-	return NULL;
-}
-
 static powerup_t *_get_new_powerup(void)
 {
 	int i;
@@ -103,65 +70,6 @@ static powerup_t *_get_new_powerup(void)
 			return &_powerups[i];
 
 	return NULL;
-}
-
-static void _start_boss_fight(void)
-{
-	_is_boss_fight = true;
-}
-
-static void _go_to_boss(void *data)
-{
-	_new_scene = SCENE_TYPE_BOSSFIGHT;
-}
-
-static void _enemy_spawner(void *data)
-{
-	enemy_type_t maxtype;
-	int spawn_interval;
-	enemy_t *e;
-
-	if (_is_boss_fight) {
-		if (_count_enemies() == 0)
-			timers_start(2000, false, NULL, _go_to_boss);
-		return;
-	}
-
-	e = _get_new_enemy();
-
-	if (!e)
-		return;
-
-	if (_level < 2)
-		maxtype = ENEMY_TYPE_EASY;
-	else if (_level < 4)
-		maxtype = ENEMY_TYPE_MOVING;
-	else if (_level < 10)
-		maxtype = ENEMY_TYPE_FAST;
-	else if (_level < 20)
-		maxtype = ENEMY_TYPE_TANK;
-	else 
-		maxtype = ENEMY_TYPE_BOSS;
-
-	if (maxtype == ENEMY_TYPE_BOSS) {
-		_start_boss_fight();
-		return;
-	}
-
-	if (_level > 18)
-		enemy_activate(e, ENEMY_TYPE_TANK, -1, -e->images[0].h);
-	else
-		enemy_activate(e, rand() % (maxtype+1), -1, -e->images[0].h);
-
-	_level += 1;
-	number_set_val(&_level_num, _level);
-
-	spawn_interval = ENEMY_SPAWN_INTERVAL - (_level * 250);
-
-	if (spawn_interval < ENEMY_MIN_SPAWN_INTERVAL)
-		spawn_interval = ENEMY_MIN_SPAWN_INTERVAL;
-
-	timers_change_dur(_enemy_spawner_tim, spawn_interval);
 }
 
 static void _powerup_spawner(void *data)
@@ -177,7 +85,7 @@ static void _powerup_spawner(void *data)
 			 -pu->ro.h);
 }
 
-static void _end_game(void *data)
+static void _end_bossfight(void *data)
 {
 	_new_scene = SCENE_TYPE_DEAD;
 }
@@ -194,25 +102,25 @@ static void _player_killed(void)
 
 	_player_killed_triggered = true;
 
-	if (_enemy_spawner_tim)
-		timers_stop(_enemy_spawner_tim);
 	if (_powerup_spawner_tim)
 		timers_stop(_powerup_spawner_tim);
 
-	_enemy_spawner_tim = NULL;
 	_powerup_spawner_tim = NULL;
 
-	timers_start(2000, false, NULL, _end_game);
+	timers_start(2000, false, NULL, _end_bossfight);
 }
 
 static void _on_collision(void *obj1, game_object_type_t type1, void *obj2, game_object_type_t type2)
 {
-	if (type1 == GAME_OBJECT_TYPE_ENEMY) {
+	if (type1 == GAME_OBJECT_TYPE_BOSS) {
 		bullet_t *b = obj2;
-		enemy_t *e = obj1;
+		boss_t *boss = obj1;
 
-		enemy_damage(e, b->damage);
+		boss_damage(boss, b->damage);
 		bullet_hit(b);
+
+		if (boss->dead)
+			timers_stop(_powerup_spawner_tim);
 	}
 
 	if (type1 == GAME_OBJECT_TYPE_PLAYER) {
@@ -252,13 +160,11 @@ static void _init()
 
 	player_init(&_player, SCREEN_W / 4, SCREEN_H-32);
 
+	boss_init(&_boss);
+
 	memset(_bullets, 0, sizeof(_bullets));
 	for (i = 0; i < BULLETS_POOL_SIZE; ++i)
 		bullet_init(&_bullets[i]);
-
-	memset(_enemies, 0, sizeof(_enemies));
-	for (i = 0; i < ENEMY_POOL_SIZE; ++i)
-		enemy_init(&_enemies[i]);
 
 	memset(_powerups, 0, sizeof(_powerups));
 	for (i = 0; i < POWERUP_POOL_SIZE; ++i)
@@ -266,20 +172,14 @@ static void _init()
 
 	hud_init(&_hud, 50, SCREEN_H - 8);
 
-	number_init(&_level_num, 20, SCREEN_H-30);
-
 	collisions_init(&_player,
 			_bullets, BULLETS_POOL_SIZE,
-			_enemies, ENEMY_POOL_SIZE,
+			NULL, 0,
 			_powerups, POWERUP_POOL_SIZE,
-			NULL,
+			&_boss,
 			_on_collision);
 
-	_enemy_spawner_tim = timers_start(6000, true, NULL, _enemy_spawner);
 	_powerup_spawner_tim = timers_start(7000, true, NULL, _powerup_spawner);
-
-	_level = 0;
-	number_set_val(&_level_num, _level);
 	
 	_player_killed_triggered = false;
 }
@@ -302,13 +202,7 @@ static void _update(float dt)
 	if (_player.dead) {
 		_player_killed();
 	} else {
-		for (i = 0; i < ENEMY_POOL_SIZE; ++i) {
-			enemy_t *e = &_enemies[i];
-			if (!e->go.active)
-				continue;
-
-			enemy_update(e, dt, _bullets, BULLETS_POOL_SIZE, &_player);
-		}
+		boss_update(&_boss, dt, _bullets, BULLETS_POOL_SIZE, &_player);
 		for (i = 0; i < BULLETS_POOL_SIZE; ++i)
 			bullet_update(&_bullets[i], dt);
 		for (i = 0; i < POWERUP_POOL_SIZE; ++i)
@@ -325,8 +219,7 @@ static void _render(void)
 {
 	int i;
 
-	for (i = 0; i < ENEMY_POOL_SIZE; ++i)
-		enemy_render(&_enemies[i]);
+	boss_render(&_boss);
 
 	player_render(&_player);
 
@@ -334,8 +227,6 @@ static void _render(void)
 		renderer_render(&_bullets[i].ro);
 	for (i = 0; i < POWERUP_POOL_SIZE; ++i)
 		renderer_render(&_powerups[i].ro);
-
-	number_render(&_level_num);
 
 	hud_render(&_hud);
 }
@@ -351,8 +242,6 @@ static void _end()
 	inputs_set_on_handler(INPUT_RAPIDFIRE, NULL);
 	inputs_set_on_handler(INPUT_SELECT, NULL);
 
-	if (_enemy_spawner_tim)
-		timers_stop(_enemy_spawner_tim);
 	if (_powerup_spawner_tim)
 		timers_stop(_powerup_spawner_tim);
 	
@@ -370,18 +259,12 @@ static void _end()
 		powerup_destroy(pu);
 	}
 
-	for (i = 0; i < ENEMY_POOL_SIZE; ++i) {
-		enemy_t *e = &_enemies[i];
-
-		enemy_diactivate(e);
-		enemy_destroy(e);
-	}
-
-	number_destroy(&_level_num);
-
 	hud_destroy(&_hud);
 
+	boss_destroy(&_boss);
+
 	player_destroy(&_player);
+
 }
 
 static int _change_scene(void)
@@ -391,7 +274,7 @@ static int _change_scene(void)
 	return tmp;
 }
 
-static scene_t _game_scene = {
+static scene_t _bossfight_scene = {
 	.init = _init,
 	.update = _update,
 	.render = _render,
@@ -399,7 +282,7 @@ static scene_t _game_scene = {
 	.change_scene = _change_scene,
 };
 
-scene_t *scenes_get_game_scene(void)
+scene_t *scenes_get_bossfight_scene(void)
 {
-	return &_game_scene;
+	return &_bossfight_scene;
 }
