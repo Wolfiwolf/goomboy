@@ -119,6 +119,12 @@ void bullet_update(bullet_t *b, float dt)
 
 	if (b->go.y >= SCREEN_H + b->ro.h)
 		bullet_diactivate(b);
+
+	if (b->go.x >= SCREEN_W + b->ro.w)
+		bullet_diactivate(b);
+
+	if (b->go.x <= 0 - b->ro.w)
+		bullet_diactivate(b);
 }
 
 void bullet_diactivate(bullet_t *b)
