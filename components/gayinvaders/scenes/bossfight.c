@@ -119,8 +119,10 @@ static void _on_collision(void *obj1, game_object_type_t type1, void *obj2, game
 		boss_damage(boss, b->damage);
 		bullet_hit(b);
 
-		if (boss->dead)
+		if (boss->dead) {
 			timers_stop(_powerup_spawner_tim);
+			_powerup_spawner_tim = NULL;
+		}
 	}
 
 	if (type1 == GAME_OBJECT_TYPE_PLAYER) {
