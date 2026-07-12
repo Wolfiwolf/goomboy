@@ -27,6 +27,7 @@ void gayinvaders_main(int argc, char *argv[])
 		scenes_get_game_scene(),
 		scenes_get_dead_scene(),
 		scenes_get_bossfight_scene(),
+		scenes_get_win_scene(),
 	};
 	int active_scene = 0;
 	int new_scene;
