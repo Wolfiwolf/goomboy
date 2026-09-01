@@ -75,6 +75,16 @@ void timers_stop(timer_handle_t *tim_handle)
 	gayinvaders_free(tim);
 }
 
+void timers_stop_and_run(timer_handle_t *tim_handle)
+{
+	llist_node_t *node = tim_handle;
+	timer_obj_t *tim = node->obj;
+
+	tim->on_finish(tim->data);
+
+	timers_stop(tim_handle);
+}
+
 void timers_change_dur(timer_handle_t *tim_handle, int duration)
 {
 	llist_node_t *node = tim_handle;
