@@ -110,6 +110,11 @@ static void _player_killed(void)
 	timers_start(2000, false, NULL, _end_bossfight);
 }
 
+static void _go_to_win(void *data)
+{
+	_new_scene = SCENE_TYPE_WIN;
+}
+
 static void _on_collision(void *obj1, game_object_type_t type1, void *obj2, game_object_type_t type2)
 {
 	if (type1 == GAME_OBJECT_TYPE_BOSS) {
@@ -122,6 +127,7 @@ static void _on_collision(void *obj1, game_object_type_t type1, void *obj2, game
 		if (boss->dead) {
 			timers_stop(_powerup_spawner_tim);
 			_powerup_spawner_tim = NULL;
+			timers_start(2000, false, NULL, _go_to_win);
 		}
 	}
 

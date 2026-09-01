@@ -21,6 +21,7 @@ typedef enum {
 	SCENE_TYPE_GAME,
 	SCENE_TYPE_DEAD,
 	SCENE_TYPE_BOSSFIGHT,
+	SCENE_TYPE_WIN,
 	SCENE_TYPE_COUNT,
 } scene_type_t;
 
@@ -35,5 +36,6 @@ scene_t *scenes_get_badboysboss_scene(void);
 scene_t *scenes_get_dead_scene(void);
 scene_t *scenes_get_game_scene(void);
 scene_t *scenes_get_bossfight_scene(void);
+scene_t *scenes_get_win_scene(void);
 
 #endif

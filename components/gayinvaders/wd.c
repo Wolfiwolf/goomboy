@@ -15,6 +15,7 @@ static asset_info_t _asset_table[ASSET_TYPE_COUNT] = {};
 static const char *_asset_names[ASSET_TYPE_COUNT] = {
 	"INTRO",
 	"DEAD",
+	"WIN",
 	"MAINMENUSELECTOR",
 	"MAINMENUBTN0",
 	"MAINMENUBTN1",
