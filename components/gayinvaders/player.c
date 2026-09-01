@@ -54,11 +54,6 @@ void player_init(player_t *p, int x, int y)
 	p->go.active = true;
 }
 
-void player_destroy(player_t *p)
-{
-	wd_not_using(ASSET_TYPE_PLAYER);
-}
-
 void player_update(player_t *p, float dt,
 		   bullet_t *bullets, int bullets_cnt)
 {
@@ -194,7 +189,7 @@ void player_shield_up(player_t *p)
 		return;
 
 	if (p->shield_up)
-		timers_stop(p->shield_timer);
+		timers_stop_and_run(p->shield_timer);
 
 	p->shield_timer = timers_start(10000, false, p, _shield_timeout);
 
@@ -226,4 +221,11 @@ void player_rapidfire_on(player_t *p)
 	timers_start(4000, false, p, _rapid_fire_off);
 
 	p->has_rapidfire = false;
+}
+
+void player_destroy(player_t *p)
+{
+	wd_not_using(ASSET_TYPE_PLAYER);
+	if (p->shield_up)
+		timers_stop_and_run(p->shield_timer);
 }
