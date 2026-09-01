@@ -253,8 +253,10 @@ static void _end()
 	inputs_set_on_handler(INPUT_RAPIDFIRE, NULL);
 	inputs_set_on_handler(INPUT_SELECT, NULL);
 
-	if (_powerup_spawner_tim)
+	if (_powerup_spawner_tim) {
 		timers_stop(_powerup_spawner_tim);
+		_powerup_spawner_tim = NULL;
+	}
 	
 	for (i = 0; i < BULLETS_POOL_SIZE; ++i) {
 		bullet_t *b = &_bullets[i];
