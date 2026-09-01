@@ -131,8 +131,11 @@ void bullet_diactivate(bullet_t *b)
 {
 	wd_not_using(ASSET_TYPE_BULLETNORMAL+b->type);
 
-	if (b->has_hit)
+	if (b->has_hit) {
 		wd_not_using(ASSET_TYPE_BULLETNORMALHIT+b->type);
+		b->has_hit = false;
+	}
+
 	b->go.active = false;
 }
 
