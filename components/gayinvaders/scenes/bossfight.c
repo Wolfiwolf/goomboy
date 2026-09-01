@@ -121,6 +121,9 @@ static void _on_collision(void *obj1, game_object_type_t type1, void *obj2, game
 		bullet_t *b = obj2;
 		boss_t *boss = obj1;
 
+		if (boss->dead)
+			return;
+
 		boss_damage(boss, b->damage);
 		bullet_hit(b);
 
