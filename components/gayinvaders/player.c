@@ -122,6 +122,7 @@ void player_fire(player_t *p, bullet_type_t bullet_type,
 		 bullet_t *bullets, int bullets_cnt)
 {
 	size_t current_t;
+	bool has_shot;
 	int i;
 
 	if (p->dead)
@@ -142,9 +143,9 @@ void player_fire(player_t *p, bullet_type_t bullet_type,
 	} else if (bullet_type == BULLET_TYPE_BOMB) {
 		if (!p->has_bomb)
 			return;
-		p->has_bomb = false;
 	}
 
+	has_shot = false;
 	for (i = 0; i < bullets_cnt; ++i) {
 		bullet_t *b = &bullets[i];
 		int ret;
@@ -156,8 +157,14 @@ void player_fire(player_t *p, bullet_type_t bullet_type,
 				      p->go.x, p->go.y-10);
 		if (ret)
 			printf("Bullet alloc failed!\n");
+		else
+			has_shot = true;
+
 		break;
 	}
+
+	if (has_shot && bullet_type == BULLET_TYPE_BOMB)
+		p->has_bomb = false;
 }
 
 void player_damage(player_t *p, int amount)
