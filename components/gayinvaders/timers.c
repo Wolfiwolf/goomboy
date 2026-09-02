@@ -9,6 +9,7 @@ typedef struct {
 	bool loop;
 	void *data;
 	void (*on_finish)(void *data);
+	bool stop_me;
 } timer_obj_t;
 
 static llist_t _timers;
@@ -35,7 +36,7 @@ void timers_update(float dt)
 		}
 
 		tim->on_finish(tim->data);
-		if (tim->loop) {
+		if (tim->loop && !tim->stop_me) {
 			tim->counter = tim->duration;
 			continue;
 		}
@@ -59,6 +60,7 @@ timer_handle_t *timers_start(int duration, bool loop,
 	tim->loop = loop;
 	tim->data = data;
 	tim->on_finish = on_finish;
+	tim->stop_me = false;
 
 	llist_push_back(&_timers, tim);
 
@@ -91,4 +93,12 @@ void timers_change_dur(timer_handle_t *tim_handle, int duration)
 	timer_obj_t *tim = node->obj;
 
 	tim->duration = duration;
+}
+
+void timers_stop_me(timer_handle_t *tim_handle)
+{
+	llist_node_t *node = tim_handle;
+	timer_obj_t *tim = node->obj;
+
+	tim->stop_me = true;
 }

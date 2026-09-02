@@ -16,4 +16,7 @@ void timers_stop_and_run(timer_handle_t *tim_handle);
 
 void timers_change_dur(timer_handle_t *tim_handle, int duration);
 
+// Call inside handler to stop after call
+void timers_stop_me(timer_handle_t *tim_handle);
+
 #endif
