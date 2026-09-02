@@ -8,13 +8,11 @@
 #include "scene.h"
 
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "gayinvaders.h"
 #include "gameobject.h"
 #include "inputs.h"
-#include "physics.h"
 #include "renderer.h"
 #include "timers.h"
 
