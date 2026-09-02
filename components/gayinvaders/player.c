@@ -205,9 +205,10 @@ void player_shield_up(player_t *p)
 	p->shield.ro.w = ass_inf->w;
 	p->shield.ro.h = ass_inf->h;
 
-	p->shield_up = true;
-
-	p->has_shield = false;
+	if (p->shield.ro.buff) {
+		p->shield_up = true;
+		p->has_shield = false;
+	}
 }
 
 static void _rapid_fire_off(void* data)
