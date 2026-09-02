@@ -42,14 +42,14 @@ static void _render(void)
 	renderer_flush();
 }
 
-static void _on_select_press()
+static void _on_rapidfire_press()
 {
 	_new_scene = SCENE_TYPE_BADBOYS;
 }
 
 static void _init()
 {
-	inputs_set_on_handler(INPUT_SELECT, _on_select_press);
+	inputs_set_on_handler(INPUT_RAPIDFIRE, _on_rapidfire_press);
 	_render();
 }
 

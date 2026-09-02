@@ -83,7 +83,7 @@ static void _on_fire_press()
 	}
 }
 
-static void _on_select_press()
+static void _on_rapidfire_press()
 {
 	_new_scene = SCENE_TYPE_MAINMENU;
 }
@@ -97,7 +97,7 @@ static void _init()
 	inputs_set_on_handler(INPUT_DOWN, _on_down_press);
 	inputs_set_on_handler(INPUT_UP, _on_up_press);
 	inputs_set_on_handler(INPUT_FIRE_NORMAL, _on_fire_press);
-	inputs_set_on_handler(INPUT_SELECT, _on_select_press);
+	inputs_set_on_handler(INPUT_RAPIDFIRE, _on_rapidfire_press);
 
 	for (i = 0; i < BUTTONS_CNT; ++i) {
 		ass_type = ASSET_TYPE_BADBOYSBTN0+i;
@@ -131,7 +131,7 @@ static void _end(void)
 	inputs_set_on_handler(INPUT_DOWN, NULL);
 	inputs_set_on_handler(INPUT_UP, NULL);
 	inputs_set_on_handler(INPUT_FIRE_NORMAL, NULL);
-	inputs_set_on_handler(INPUT_SELECT, NULL);
+	inputs_set_on_handler(INPUT_RAPIDFIRE, NULL);
 
 	for (i = 0; i < BUTTONS_CNT; ++i)
 		wd_not_using(ASSET_TYPE_BADBOYSBTN0+i);
