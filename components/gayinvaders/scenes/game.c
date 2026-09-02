@@ -122,8 +122,12 @@ static void _enemy_spawner(void *data)
 	enemy_t *e;
 
 	if (_is_boss_fight) {
-		if (_count_enemies() == 0)
+		if (_count_enemies() == 0) {
+			_is_boss_fight = false;
 			timers_start(2000, false, NULL, _go_to_boss);
+			timers_stop_me(_enemy_spawner_tim);
+			_enemy_spawner_tim = NULL;
+		}
 		return;
 	}
 
@@ -355,6 +359,9 @@ static void _end()
 		timers_stop(_enemy_spawner_tim);
 	if (_powerup_spawner_tim)
 		timers_stop(_powerup_spawner_tim);
+
+	_enemy_spawner_tim = NULL;
+	_powerup_spawner_tim = NULL;
 	
 	for (i = 0; i < BULLETS_POOL_SIZE; ++i) {
 		bullet_t *b = &_bullets[i];
@@ -382,6 +389,8 @@ static void _end()
 	hud_destroy(&_hud);
 
 	player_destroy(&_player);
+
+	_is_boss_fight = false;
 }
 
 static int _change_scene(void)
