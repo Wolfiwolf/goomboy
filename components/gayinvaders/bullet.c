@@ -159,7 +159,8 @@ void bullet_hit(bullet_t *b)
 	b->ro.h = ass_inf->h;
 	b->ro.buff = wd_get_asset(ASSET_TYPE_BULLETNORMALHIT+b->type);
 
-	timers_start(1000, false, b, _diactivate);
+	if (b->ro.buff)
+		timers_start(1000, false, b, _diactivate);
 }
 
 bool bullet_is_players(bullet_type_t btype)
