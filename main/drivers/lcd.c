@@ -87,6 +87,7 @@ int lcd_init(void (*buffer_transfered_callback)(void))
 	ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(s_panel, true));
 
 	esp_lcd_panel_swap_xy(s_panel, true);
+	esp_lcd_panel_mirror(s_panel, true, true);
 
 	gpio_set_level(LCD_BL, LCD_BL_ON);
 
