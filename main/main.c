@@ -26,8 +26,7 @@
 #define SCREEN_START_X ((LCD_W_SIZE / 2) - (SCREEN_W / 2))
 #define SCREEN_START_Y ((LCD_H_SIZE / 2) - (SCREEN_H / 2))
 
-static bool first = true;
-static int _buffers_transfering = 0;
+static TaskHandle_t _lcd_waiting_task;
 
 static void stall(void)
 {
@@ -38,42 +37,30 @@ static void stall(void)
 
 static void _lcd_buffer_transfered_handler(void)
 {
-	_buffers_transfering -= 1;
+	BaseType_t higher_priority_task_woken = pdFALSE;
 
-	if (_buffers_transfering == 0)
-		gayinvaders_render_finished();
+	if (_lcd_waiting_task)
+		vTaskNotifyGiveFromISR(_lcd_waiting_task, &higher_priority_task_woken);
+	if (higher_priority_task_woken)
+		portYIELD_FROM_ISR();
 }
 
-void gayinvaders_render(const uint16_t ***screen_buff)
+int gayinvaders_present(const uint16_t *pixels, int x, int y, int w, int h)
 {
-	int x,y;
+	int ret;
 
-	if (first) {
-		_buffers_transfering = 0;
-		first = false;
+	ulTaskNotifyTake(pdTRUE, 0);
+	_lcd_waiting_task = xTaskGetCurrentTaskHandle();
+	ret = lcd_draw(SCREEN_START_X + x, SCREEN_START_Y + y, w, h, pixels);
+	if (ret) {
+		_lcd_waiting_task = NULL;
+		ESP_LOGE("", "LCD draw failed: %d", ret);
+		return ret;
 	}
 
-	while (_buffers_transfering) { }
-
-
-	for (x = 0; x < SCREEN_FRAMES_X; ++x) {
-		for (y = 0; y < SCREEN_FRAMES_Y; ++y) {
-			_buffers_transfering += 1;
-
-			lcd_draw(
-				SCREEN_START_X+(x*(SCREEN_W/SCREEN_FRAMES_X)),
-				SCREEN_START_Y+(y*(SCREEN_H/SCREEN_FRAMES_Y)),
-				 SCREEN_W/SCREEN_FRAMES_X,
-				 SCREEN_H/SCREEN_FRAMES_Y, screen_buff[x][y]);
-		}
-	}
-}
-
-void gayinvaders_render_direct(const uint16_t *screen_buff,
-			       int xoff, int yoff,
-			       int w, int h)
-{
-	lcd_draw(xoff, yoff, w, h, screen_buff);
+	ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+	_lcd_waiting_task = NULL;
+	return 0;
 }
 
 size_t gayinvaders_get_ms(void)

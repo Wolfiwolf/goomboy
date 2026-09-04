@@ -93,8 +93,3 @@ void gayinvaders_main(int argc, char *argv[])
 		}
 	}
 }
-
-void gayinvaders_render_finished(void)
-{
-	renderer_buffer_unlock();
-}

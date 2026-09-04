@@ -4,132 +4,182 @@
 #include "gayinvaders.h"
 
 #define MAGENTA_COLOR 61502
+#define RENDER_STRIP_H 20
+#define RENDER_MAX_COMMANDS 192
 
-static uint16_t *_screen_buffers[SCREEN_FRAMES_X][SCREEN_FRAMES_Y];
-static bool _dont_flush = false;
-static bool _flip_next = false;
-static bool _buffer_lock = false;
+typedef struct {
+	const uint16_t *pixels;
+	int x, y;
+	int w, h;
+	bool flipped;
+} render_command_t;
 
-void renderer_init(void)
+static uint16_t *_strip;
+static render_command_t _commands[RENDER_MAX_COMMANDS];
+static size_t _commands_count;
+static bool _dont_flush;
+static bool _flip_next;
+static bool _overflow_logged;
+
+static void composite(const render_command_t *command, int strip_y, int strip_h)
 {
+	int first_x = command->x < 0 ? 0 : command->x;
+	int last_x = command->x + command->w;
+	int first_y = command->y > strip_y ? command->y : strip_y;
+	int last_y = command->y + command->h;
 	int x, y;
 
-	for (x = 0; x < SCREEN_FRAMES_X; ++x) {
-		for (y = 0; y < SCREEN_FRAMES_Y; ++y) {
-			_screen_buffers[x][y] = gayinvaders_malloc((2 * (SCREEN_W/SCREEN_FRAMES_X) * (SCREEN_H/SCREEN_FRAMES_Y)));
-			if (!_screen_buffers[x][y])
-				printf("Failed to allocate screen buffer!\n");
+	if (last_x > SCREEN_W)
+		last_x = SCREEN_W;
+	if (last_y > strip_y + strip_h)
+		last_y = strip_y + strip_h;
+	if (first_x >= last_x || first_y >= last_y)
+		return;
+
+	for (y = first_y; y < last_y; ++y) {
+		int src_y = y - command->y;
+		int dst_y = y - strip_y;
+
+		for (x = first_x; x < last_x; ++x) {
+			int src_x = x - command->x;
+			uint16_t pix;
+
+			if (command->flipped)
+				src_x = command->w - 1 - src_x;
+			pix = command->pixels[src_y * command->w + src_x];
+			if (pix != MAGENTA_COLOR)
+				_strip[dst_y * SCREEN_W + x] = pix;
 		}
 	}
 }
 
+static int present_strip(int strip_y, int strip_h)
+{
+	memset(_strip, 0, SCREEN_W * strip_h * sizeof(*_strip));
+
+	for (size_t i = 0; i < _commands_count; ++i)
+		composite(&_commands[i], strip_y, strip_h);
+
+	return gayinvaders_present(_strip, 0, strip_y, SCREEN_W, strip_h);
+}
+
+void renderer_init(void)
+{
+	_strip = gayinvaders_malloc(SCREEN_W * RENDER_STRIP_H * sizeof(*_strip));
+	if (!_strip)
+		printf("Failed to allocate LCD strip buffer!\n");
+}
+
 void renderer_clear(void)
 {
-	int x, y;
-
-	while (_buffer_lock) { }
-
-	for (x = 0; x < SCREEN_FRAMES_X; ++x)
-		for (y = 0; y < SCREEN_FRAMES_Y; ++y)
-			memset(_screen_buffers[x][y], 0, (2 * (SCREEN_W/SCREEN_FRAMES_X) * (SCREEN_H/SCREEN_FRAMES_Y)));
+	_commands_count = 0;
+	_overflow_logged = false;
 }
 
 void renderer_render(const render_obj_t *ro)
 {
-	int start_x, start_y;
 	game_object_t *go;
-	int end_x, end_y;
-	int img_x, img_y;
+	render_command_t *command;
 
-	while (_buffer_lock) { }
+	if (!ro || !ro->parent || !ro->buff || ro->w <= 0 || ro->h <= 0)
+		return;
 
 	go = ro->parent;
 	if (!go->active)
 		return;
 
-	start_x = go->x - ((float)ro->w / 2);
-	start_y = go->y - ((float)ro->h / 2);
-	end_x = go->x + ((float)ro->w / 2);
-	end_y = go->y + ((float)ro->h / 2);
-
-	img_x = 0;
-	img_y = 0;
-
-	for (; start_x < end_x; ++start_x) {
-		int y;
-
-
-		img_y = 0;
-
-		if (start_x < 0) {
-			img_x++;
-			continue;
+	if (_commands_count == RENDER_MAX_COMMANDS) {
+		if (!_overflow_logged) {
+			printf("Renderer command limit (%d) reached\n", RENDER_MAX_COMMANDS);
+			_overflow_logged = true;
 		}
-
-		if (start_x >= SCREEN_W)
-			break;
-
-		for (y = start_y; y < end_y; ++y) {
-			uint16_t pix;
-			int x = start_x;
-
-			if (y < 0) {
-				++img_y;
-				continue;
-			}
-
-			if (y >= SCREEN_H)
-				break;
-
-			if (_flip_next)
-				pix = ro->buff[img_y * ro->w + (ro->w-img_x)];
-			else
-				pix = ro->buff[img_y * ro->w + img_x];
-
-			++img_y;
-
-			/* Magenta marks transparency */
-			if (pix == MAGENTA_COLOR)
-				continue;
-
-			_screen_buffers[x/(SCREEN_W/SCREEN_FRAMES_X)]
-				       [y/(SCREEN_H/SCREEN_FRAMES_Y)]
-				       [(y%(SCREEN_H/SCREEN_FRAMES_Y))*(SCREEN_W/SCREEN_FRAMES_X)+(x%(SCREEN_W/SCREEN_FRAMES_X))] = pix;
-
-		}
-		++img_x;
+		_flip_next = false;
+		return;
 	}
 
+	command = &_commands[_commands_count++];
+	command->pixels = ro->buff;
+	command->x = go->x - ((float)ro->w / 2);
+	command->y = go->y - ((float)ro->h / 2);
+	command->w = ro->w;
+	command->h = ro->h;
+	command->flipped = _flip_next;
 	_flip_next = false;
 }
 
 void renderer_flush(void)
 {
-	const uint16_t **rows[SCREEN_FRAMES_X];
-	int i;
+	int y;
 
 	if (_dont_flush) {
 		_dont_flush = false;
 		return;
 	}
+	if (!_strip) {
+		printf("Cannot flush without an LCD strip buffer\n");
+		return;
+	}
 
-	while (_buffer_lock) { }
+	for (y = 0; y < SCREEN_H; y += RENDER_STRIP_H) {
+		int strip_h = SCREEN_H - y;
 
-	for (i = 0; i < SCREEN_FRAMES_X; ++i)
-		rows[i] = (const uint16_t **)_screen_buffers[i];
+		if (strip_h > RENDER_STRIP_H)
+			strip_h = RENDER_STRIP_H;
+		if (present_strip(y, strip_h))
+			break;
+	}
+}
 
-	_buffer_lock = true;
-	gayinvaders_render((const uint16_t ***)rows);
+void renderer_stream_asset(asset_type_t asset)
+{
+	const asset_info_t *info = wd_get_asset_info(asset);
+	uint16_t *source;
+	int y;
+
+	if (!_strip || !info || info->w <= 0 || info->h <= 0)
+		return;
+
+	source = gayinvaders_malloc(info->w * RENDER_STRIP_H * sizeof(*source));
+	if (!source) {
+		printf("Failed to allocate asset strip buffer\n");
+		return;
+	}
+
+	for (y = 0; y < SCREEN_H; y += RENDER_STRIP_H) {
+		render_command_t command = {
+			.pixels = source,
+			.x = 0,
+			.y = y,
+			.w = info->w,
+			.h = 0,
+		};
+		int strip_h = SCREEN_H - y;
+
+		if (strip_h > RENDER_STRIP_H)
+			strip_h = RENDER_STRIP_H;
+		memset(_strip, 0, SCREEN_W * strip_h * sizeof(*_strip));
+
+		if (y < info->h) {
+			command.h = info->h - y;
+			if (command.h > strip_h)
+				command.h = strip_h;
+			if (wd_read_asset_direct(asset, source, 0, y, info->w, command.h)) {
+				printf("Failed to read streamed asset\n");
+				break;
+			}
+			composite(&command, y, strip_h);
+		}
+
+		if (gayinvaders_present(_strip, 0, y, SCREEN_W, strip_h))
+			break;
+	}
+
+	gayinvaders_free(source);
 }
 
 void renderer_dont_flush(void)
 {
 	_dont_flush = true;
-}
-
-void renderer_buffer_unlock(void)
-{
-	_buffer_lock = false;
 }
 
 void renderer_flip_next(void)

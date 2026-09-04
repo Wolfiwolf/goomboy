@@ -9,36 +9,7 @@ static int _new_scene = -1;
 
 static void _render_dead(void)
 {
-	const asset_info_t *ass = wd_get_asset_info(ASSET_TYPE_DEAD);
-	game_object_t go;
-	render_obj_t ro;
-	uint16_t *buff;
-	int x, y;
-
-	ro.w = ass->w;
-	ro.h = 16;
-	ro.parent = &go;
-
-	buff = gayinvaders_malloc(ro.w*ro.h*2);
-	while (!buff) {
-		gayinvaders_sleep_ms(10);
-		buff = gayinvaders_malloc(ro.w*ro.h*2);
-	}
-
-	renderer_clear();
-	for (x = 0; x < ass->w; x += ro.w) {
-		for (y = 0; y < ass->h; y += ro.h) {
-			go.x = x+(float)ro.w/2;
-			go.y = y+(float)ro.h/2;
-			wd_read_asset_direct(ASSET_TYPE_DEAD, buff, x, y, ro.w, ro.h);
-			ro.buff = buff;
-			renderer_render(&ro);
-		}
-	}
-
-	gayinvaders_free(buff);
-
-	renderer_flush();
+	renderer_stream_asset(ASSET_TYPE_DEAD);
 }
 
 static void _dead_end(void *data)
